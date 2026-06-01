@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Heritage Realtor - Buy, Sell & Rent Properties</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --primary: #1a3c5e; --accent: #e8952c; --light: #f5f7fa;
+      --white: #ffffff; --text: #333; --muted: #777;
+      --border: #e0e0e0; --radius: 12px; --shadow: 0 4px 24px rgba(0,0,0,0.10);
+    }
+    body { font-family: 'Segoe UI', sans-serif; color: var(--text); background: var(--white); }
+    a { text-decoration: none; color: inherit; }
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 5%; height: 70px;
+      background: rgba(26,60,94,0.97); backdrop-filter: blur(8px);
+      box-shadow: 0 2px 16px rgba(0,0,0,0.15);
+    }
+    .nav-logo { font-size: 1.5rem; font-weight: 800; color: var(--white); letter-spacing: 1px; }
+    .nav-logo span { color: var(--accent); }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a { color: rgba(255,255,255,0.85); font-size: 0.95rem; font-weight: 500; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--accent); }
+    .nav-cta { background: var(--accent); color: var(--white); padding: 10px 22px; border-radius: 25px; font-weight: 600; font-size: 0.9rem; transition: background 0.2s; }
+    .nav-cta:hover { background: #d4821f; }
+    .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; }
+    .hamburger span { width: 24px; height: 2px; background: white; border-radius: 2px; }
+    .hero {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #1a3c5e 0%, #0d2340 60%, #1a3c5e 100%);
+      display: flex; align-items: center; justify-content: center;
+      text-align: center; padding: 80px 5% 60px; position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .hero-content { position: relative; max-width: 780px; }
+    .hero-badge { display: inline-block; background: rgba(232,149,44,0.2); color: var(--accent); padding: 6px 18px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 20px; border: 1px solid rgba(232,149,44,0.4); }
+    .hero h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 800; color: var(--white); line-height: 1.15; margin-bottom: 18px; }
+    .hero h1 span { color: var(--accent); }
+    .hero p { font-size: 1.1rem; color: rgba(255,255,255,0.75); margin-bottom: 40px; line-height: 1.7; }
+    .search-box { background: var(--white); border-radius: 16px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .search-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .search-tab { padding: 8px 20px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; cursor: pointer; border: 2px solid var(--border); background: transparent; color: var(--muted); transition: all 0.2s; }
+    .search-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .search-fields { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; }
+    .search-fields select, .search-fields input { padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.95rem; color: var(--text); outline: none; transition: border-color 0.2s; }
+    .search-fields select:focus, .search-fields input:focus { border-color: var(--primary); }
+    .search-btn { padding: 12px 28px; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+    .search-btn:hover { background: #d4821f; }
+    .stats { background: var(--white); padding: 50px 5%; display: flex; justify-content: center; gap: 60px; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+    .stat { text-align: center; }
+    .stat-num { font-size: 2.2rem; font-weight: 800; color: var(--primary); }
+    .stat-num span { color: var(--accent); }
+    .stat-label { font-size: 0.9rem; color: var(--muted); margin-top: 4px; }
+    section { padding: 80px 5%; }
+    .section-header { text-align: center; margin-bottom: 50px; }
+    .section-label { color: var(--accent); font-weight: 700; font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
+    .section-title { font-size: clamp(1.6rem, 3vw, 2.3rem); font-weight: 800; color: var(--primary); }
+    .section-sub { color: var(--muted); margin-top: 12px; font-size: 1rem; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+    .filter-bar { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 40px; }
+    .filter-btn { padding: 9px 22px; border-radius: 25px; border: 2px solid var(--border); background: transparent; font-size: 0.9rem; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+    .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .filter-btn:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+    .properties-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 28px; }
+    .property-card { background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.25s, box-shadow 0.25s; cursor: pointer; border: 1px solid var(--border); }
+    .property-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(0,0,0,0.15); }
+    .card-image { height: 210px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+    .card-image .img-icon { font-size: 4rem; opacity: 0.4; }
+    .card-badge { position: absolute; top: 14px; left: 14px; padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .badge-sale { background: #e74c3c; color: white; }
+    .badge-rent { background: #27ae60; color: white; }
+    .badge-type { position: absolute; top: 14px; right: 14px; background: rgba(0,0,0,0.5); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
+    .card-body { padding: 20px; }
+    .card-price { font-size: 1.35rem; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
+    .card-price .per { font-size: 0.85rem; font-weight: 500; color: var(--muted); }
+    .card-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+    .card-location { color: var(--muted); font-size: 0.88rem; display: flex; align-items: center; gap: 5px; margin-bottom: 16px; }
+    .card-features { display: flex; gap: 16px; flex-wrap: wrap; padding-top: 14px; border-top: 1px solid var(--border); }
+    .card-feature { display: flex; align-items: center; gap: 5px; font-size: 0.85rem; color: var(--muted); }
+    .card-feature span.icon { font-size: 0.9rem; }
+    .load-more-wrap { text-align: center; margin-top: 40px; }
+    .load-more-btn { padding: 13px 36px; border: 2px solid var(--primary); background: transparent; color: var(--primary); border-radius: 30px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; }
+    .load-more-btn:hover { background: var(--primary); color: white; }
+    .grid-loading { text-align: center; color: var(--muted); grid-column: 1/-1; padding: 60px; font-size: 1rem; }
+    .how-section { background: var(--light); }
+    .steps-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 30px; }
+    .step-card { text-align: center; padding: 36px 24px; }
+    .step-num { width: 60px; height: 60px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 800; margin: 0 auto 20px; }
+    .step-icon { font-size: 2rem; margin-bottom: 14px; }
+    .step-title { font-size: 1.05rem; font-weight: 700; color: var(--primary); margin-bottom: 10px; }
+    .step-desc { font-size: 0.9rem; color: var(--muted); line-height: 1.7; }
+    .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .about-visual { background: linear-gradient(135deg, #1a3c5e, #2a6496); border-radius: 20px; height: 420px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; padding: 40px; gap: 20px; }
+    .about-visual .big-icon { font-size: 5rem; }
+    .about-visual h3 { font-size: 1.4rem; font-weight: 700; text-align: center; }
+    .about-visual p { font-size: 0.9rem; opacity: 0.8; text-align: center; line-height: 1.6; }
+    .about-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 28px; }
+    .about-stat { background: rgba(255,255,255,0.1); border-radius: 12px; padding: 16px; text-align: center; }
+    .about-stat .num { font-size: 1.6rem; font-weight: 800; color: var(--accent); }
+    .about-stat .lbl { font-size: 0.8rem; opacity: 0.8; }
+    .about-text .label { color: var(--accent); font-weight: 700; font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; }
+    .about-text h2 { font-size: 2rem; font-weight: 800; color: var(--primary); line-height: 1.2; margin-bottom: 18px; }
+    .about-text p { color: var(--muted); line-height: 1.8; margin-bottom: 14px; }
+    .about-features { display: flex; flex-direction: column; gap: 12px; margin-top: 24px; }
+    .about-feature { display: flex; align-items: center; gap: 12px; font-size: 0.95rem; color: var(--text); }
+    .about-feature .check { width: 28px; height: 28px; border-radius: 50%; background: rgba(232,149,44,0.15); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
+    .testimonials-section { background: var(--light); }
+    .testimonials-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+    .testimonial-card { background: white; border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+    .stars { color: #f1c40f; font-size: 1rem; margin-bottom: 14px; }
+    .testimonial-text { font-size: 0.95rem; color: var(--text); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+    .reviewer { display: flex; align-items: center; gap: 12px; }
+    .reviewer-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: white; font-weight: 700; flex-shrink: 0; }
+    .reviewer-name { font-weight: 700; font-size: 0.9rem; color: var(--primary); }
+    .reviewer-role { font-size: 0.8rem; color: var(--muted); }
+    .contact-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 60px; align-items: start; }
+    .contact-info h2 { font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 16px; }
+    .contact-info p { color: var(--muted); line-height: 1.8; margin-bottom: 30px; }
+    .contact-details { display: flex; flex-direction: column; gap: 18px; }
+    .contact-item { display: flex; gap: 14px; align-items: flex-start; }
+    .contact-icon { width: 44px; height: 44px; border-radius: 10px; background: rgba(26,60,94,0.1); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+    .contact-item h4 { font-size: 0.85rem; font-weight: 700; color: var(--primary); margin-bottom: 2px; }
+    .contact-item p { font-size: 0.9rem; color: var(--muted); margin: 0; }
+    .contact-form { background: var(--white); border-radius: 16px; padding: 36px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+    .contact-form h3 { font-size: 1.2rem; font-weight: 700; color: var(--primary); margin-bottom: 24px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { margin-bottom: 18px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 7px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.95rem; font-family: inherit; color: var(--text); outline: none; transition: border-color 0.2s; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+    .form-group textarea { resize: vertical; min-height: 110px; }
+    .submit-btn { width: 100%; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .submit-btn:hover { background: #0f2a45; }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .form-success { display: none; background: #d4edda; color: #155724; padding: 14px; border-radius: 10px; text-align: center; font-weight: 600; margin-top: 14px; }
+    footer { background: #0d2340; color: rgba(255,255,255,0.8); padding: 60px 5% 30px; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+    .footer-brand .logo { font-size: 1.4rem; font-weight: 800; color: white; margin-bottom: 14px; }
+    .footer-brand .logo span { color: var(--accent); }
+    .footer-brand p { font-size: 0.9rem; line-height: 1.7; color: rgba(255,255,255,0.6); }
+    .footer-social { display: flex; gap: 10px; margin-top: 18px; }
+    .social-link { width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; transition: background 0.2s; cursor: pointer; }
+    .social-link:hover { background: var(--accent); }
+    .footer-col h4 { font-size: 0.95rem; font-weight: 700; color: white; margin-bottom: 16px; }
+    .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+    .footer-col ul li a { font-size: 0.88rem; color: rgba(255,255,255,0.6); transition: color 0.2s; }
+    .footer-col ul li a:hover { color: var(--accent); }
+    .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .footer-bottom p { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
+    .modal-overlay { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: white; border-radius: 20px; max-width: 760px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(0,0,0,0.3); }
+    .modal-img { height: 260px; border-radius: 20px 20px 0 0; display: flex; align-items: center; justify-content: center; font-size: 5rem; color: white; position: relative; }
+    .modal-close { position: absolute; top: 16px; right: 16px; width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,0.4); color: white; border: none; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .modal-body { padding: 28px; }
+    .modal-badges { display: flex; gap: 10px; margin-bottom: 14px; }
+    .modal-price { font-size: 1.8rem; font-weight: 800; color: var(--primary); margin-bottom: 8px; }
+    .modal-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 6px; }
+    .modal-location { color: var(--muted); margin-bottom: 18px; }
+    .modal-features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+    .modal-feature { background: var(--light); border-radius: 10px; padding: 12px; text-align: center; font-size: 0.85rem; }
+    .modal-feature .mf-icon { font-size: 1.2rem; margin-bottom: 4px; }
+    .modal-feature .mf-val { font-weight: 700; color: var(--primary); }
+    .modal-feature .mf-key { color: var(--muted); font-size: 0.8rem; }
+    .modal-amenities { margin-bottom: 20px; }
+    .modal-amenities h4 { font-weight: 700; color: var(--primary); margin-bottom: 12px; }
+    .amenity-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .amenity-tag { padding: 6px 14px; background: rgba(26,60,94,0.08); border-radius: 20px; font-size: 0.85rem; color: var(--primary); font-weight: 500; }
+    .modal-desc { color: var(--muted); line-height: 1.8; font-size: 0.95rem; margin-bottom: 24px; }
+    .modal-cta-row { display: flex; gap: 12px; }
+    .modal-cta-row .btn-primary { flex: 1; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .modal-cta-row .btn-primary:hover { background: #0f2a45; }
+    .modal-cta-row .btn-outline { flex: 1; padding: 13px; background: transparent; color: var(--primary); border: 2px solid var(--primary); border-radius: 10px; font-weight: 700; cursor: pointer; transition: all 0.2s; }
+    .modal-cta-row .btn-outline:hover { background: var(--primary); color: white; }
+    @media (max-width: 900px) {
+      .about-grid, .contact-grid { grid-template-columns: 1fr; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .search-fields { grid-template-columns: 1fr 1fr; }
+      .search-fields .search-btn { grid-column: span 2; }
+    }
+    @media (max-width: 640px) {
+      .nav-links, .nav-cta { display: none; }
+      .hamburger { display: flex; }
+      .search-fields { grid-template-columns: 1fr; }
+      .search-fields .search-btn { grid-column: 1; }
+      .footer-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .modal-features-grid { grid-template-columns: repeat(2, 1fr); }
+      .stats { gap: 30px; }
+      .modal-cta-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<nav id="navbar">
+  <div class="nav-logo">Heritage<span> Realtor</span></div>
+  <div class="nav-links">
+    <a href="#home">Home</a>
+    <a href="#properties">Properties</a>
+    <a href="#about">About Us</a>
+    <a href="#contact">Contact</a>
+  </div>
+  <a href="#contact" class="nav-cta">List Property</a>
+  <div class="hamburger" onclick="toggleMobileMenu()">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<section class="hero" id="home">
+  <div class="hero-content">
+    <div class="hero-badge">🏡 Heritage Realtor — Nigeria's Trusted Property Marketplace</div>
+    <h1>Find Your <span>Dream</span> Property in Nigeria</h1>
+    <p>Browse thousands of verified apartments and lands for sale or rent. Your perfect home is just one search away.</p>
+    <div class="search-box">
+      <div class="search-tabs">
+        <button class="search-tab active" onclick="setSearchTab(this,'sale')">Buy</button>
+        <button class="search-tab" onclick="setSearchTab(this,'rent')">Rent</button>
+      </div>
+      <div class="search-fields">
+        <input type="text" id="search-location" placeholder="📍 Enter location..." />
+        <select id="search-type">
+          <option value="">All Property Types</option>
+          <option value="apartment">Apartment</option>
+          <option value="land">Land</option>
+        </select>
+        <select id="search-price">
+          <option value="">Any Price Range</option>
+          <option value="0-5000000">Under ₦5M</option>
+          <option value="5000000-20000000">₦5M – ₦20M</option>
+          <option value="20000000-50000000">₦20M – ₦50M</option>
+          <option value="50000000-999999999">Above ₦50M</option>
+        </select>
+        <button class="search-btn" onclick="runSearch()">🔍 Search</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="stats">
+  <div class="stat"><div class="stat-num" id="stat1-num">1,200+</div><div class="stat-label" id="stat1-label">Properties Listed</div></div>
+  <div class="stat"><div class="stat-num" id="stat2-num">850+</div><div class="stat-label" id="stat2-label">Happy Clients</div></div>
+  <div class="stat"><div class="stat-num" id="stat3-num">18+</div><div class="stat-label" id="stat3-label">Cities Covered</div></div>
+  <div class="stat"><div class="stat-num" id="stat4-num">98%</div><div class="stat-label" id="stat4-label">Satisfaction Rate</div></div>
+</div>
+
+<section id="properties">
+  <div class="section-header">
+    <div class="section-label">Our Listings</div>
+    <h2 class="section-title">Explore Properties</h2>
+    <p class="section-sub">Apartments and lands available for sale and rent across Nigeria</p>
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="filterProps(this,'all')">All</button>
+    <button class="filter-btn" onclick="filterProps(this,'sale')">For Sale</button>
+    <button class="filter-btn" onclick="filterProps(this,'rent')">For Rent</button>
+    <button class="filter-btn" onclick="filterProps(this,'apartment')">Apartments</button>
+    <button class="filter-btn" onclick="filterProps(this,'land')">Land</button>
+  </div>
+  <div class="properties-grid" id="properties-grid">
+    <p class="grid-loading">Loading properties…</p>
+  </div>
+  <div class="load-more-wrap">
+    <button class="load-more-btn" id="load-more-btn" style="display:none" onclick="loadMore()">Load More Properties</button>
+  </div>
+</section>
+
+<section class="how-section">
+  <div class="section-header">
+    <div class="section-label">Simple Process</div>
+    <h2 class="section-title">How It Works</h2>
+    <p class="section-sub">Buying, selling, or renting a property has never been this easy</p>
+  </div>
+  <div class="steps-grid">
+    <div class="step-card"><div class="step-num">1</div><div class="step-icon">🔍</div><h3 class="step-title">Search Property</h3><p class="step-desc">Use our powerful search to filter properties by location, type, and budget to find your perfect match.</p></div>
+    <div class="step-card"><div class="step-num">2</div><div class="step-icon">📋</div><h3 class="step-title">View Details</h3><p class="step-desc">Explore full property details, amenities, and neighborhood information before deciding.</p></div>
+    <div class="step-card"><div class="step-num">3</div><div class="step-icon">📞</div><h3 class="step-title">Contact Agent</h3><p class="step-desc">Reach out to our verified agents to schedule a viewing or get more information about the property.</p></div>
+    <div class="step-card"><div class="step-num">4</div><div class="step-icon">🔑</div><h3 class="step-title">Close the Deal</h3><p class="step-desc">Our team guides you through documentation, verification, and handover for a smooth transaction.</p></div>
+  </div>
+</section>
+
+<section id="about">
+  <div class="about-grid">
+    <div class="about-visual">
+      <div class="big-icon">🏢</div>
+      <h3>Heritage Realtor Nigeria</h3>
+      <p>Your trusted partner in property acquisition, rentals, and real estate investment since 2010.</p>
+      <div class="about-stats">
+        <div class="about-stat"><div class="num">15+</div><div class="lbl">Years Experience</div></div>
+        <div class="about-stat"><div class="num">850+</div><div class="lbl">Clients Served</div></div>
+        <div class="about-stat"><div class="num">1200+</div><div class="lbl">Properties</div></div>
+        <div class="about-stat"><div class="num">18</div><div class="lbl">Cities</div></div>
+      </div>
+    </div>
+    <div class="about-text">
+      <div class="label">About Us</div>
+      <h2>We Help You Find the Right Property at the Right Price</h2>
+      <p>Heritage Realtor is a leading real estate company in Nigeria with over 15 years of experience helping individuals and businesses find, buy, sell, and rent properties across major cities.</p>
+      <p>Our team of certified agents ensures every transaction is transparent, secure, and stress-free. We handle everything from property search to documentation and handover.</p>
+      <div class="about-features">
+        <div class="about-feature"><div class="check">✓</div> Verified and legally documented properties</div>
+        <div class="about-feature"><div class="check">✓</div> Professional, certified real estate agents</div>
+        <div class="about-feature"><div class="check">✓</div> End-to-end support from search to handover</div>
+        <div class="about-feature"><div class="check">✓</div> Competitive pricing with no hidden charges</div>
+        <div class="about-feature"><div class="check">✓</div> Available in 18+ cities across Nigeria</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="testimonials-section">
+  <div class="section-header">
+    <div class="section-label">Client Reviews</div>
+    <h2 class="section-title">What Our Clients Say</h2>
+    <p class="section-sub">Real stories from real people who found their dream property with us</p>
+  </div>
+  <div class="testimonials-grid">
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <p class="testimonial-text">"Heritage Realtor made buying my first apartment in Lagos incredibly easy. The agents were professional and guided me every step of the way. Highly recommended!"</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2)">AO</div>
+        <div><div class="reviewer-name">Adaeze Okonkwo</div><div class="reviewer-role">Property Buyer, Lagos</div></div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <p class="testimonial-text">"I rented a beautiful apartment in Abuja through Heritage Realtor. The process was smooth, transparent, and the property was exactly as described. Great service!"</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar" style="background:linear-gradient(135deg,#f093fb,#f5576c)">BM</div>
+        <div><div class="reviewer-name">Babatunde Musa</div><div class="reviewer-role">Tenant, Abuja</div></div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="stars">★★★★★</div>
+      <p class="testimonial-text">"Sold my land in Port Harcourt within 2 weeks! The team was responsive and handled all the paperwork efficiently. Best real estate company I've worked with."</p>
+      <div class="reviewer">
+        <div class="reviewer-avatar" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">CE</div>
+        <div><div class="reviewer-name">Chioma Eze</div><div class="reviewer-role">Land Seller, Port Harcourt</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="contact-grid">
+    <div class="contact-info">
+      <div class="section-label">Get In Touch</div>
+      <h2>Interested in a Property? Let's Talk</h2>
+      <p>Whether you're buying, selling, or renting, our expert agents are ready to help you find the perfect match. Send us a message and we'll get back to you within 24 hours.</p>
+      <div class="contact-details">
+        <div class="contact-item"><div class="contact-icon">📍</div><div><h4>Office Address</h4><p>15 Marina Road, Victoria Island, Lagos, Nigeria</p></div></div>
+        <div class="contact-item"><div class="contact-icon">📞</div><div><h4>Phone Number</h4><p>+234 800 000 0001</p></div></div>
+        <div class="contact-item"><div class="contact-icon">✉️</div><div><h4>Email Address</h4><p>info@heritagerealtors.ng</p></div></div>
+        <div class="contact-item"><div class="contact-icon">⏰</div><div><h4>Working Hours</h4><p>Monday – Saturday: 8am – 6pm</p></div></div>
+      </div>
+    </div>
+    <div class="contact-form">
+      <h3>Send an Enquiry</h3>
+      <div class="form-row">
+        <div class="form-group"><label>Full Name *</label><input type="text" id="f-name" placeholder="Your full name" /></div>
+        <div class="form-group"><label>Phone Number *</label><input type="tel" id="f-phone" placeholder="+234..." /></div>
+      </div>
+      <div class="form-group"><label>Email Address</label><input type="email" id="f-email" placeholder="your@email.com" /></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Interested In</label>
+          <select id="f-interest">
+            <option>Buying a Property</option>
+            <option>Renting a Property</option>
+            <option>Selling a Property</option>
+            <option>Property Valuation</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Property Type</label>
+          <select id="f-type">
+            <option>Apartment</option>
+            <option>Land</option>
+            <option>Both</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group"><label>Message</label><textarea id="f-message" placeholder="Tell us more about what you're looking for..."></textarea></div>
+      <button class="submit-btn" id="submit-btn" onclick="submitForm()">Send Enquiry</button>
+      <div class="form-success" id="form-success">✅ Thank you! We'll contact you within 24 hours.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <div class="logo">Heritage<span> Realtor</span></div>
+      <p>Nigeria's trusted real estate marketplace connecting buyers, sellers, and tenants since 2010.</p>
+      <div class="footer-social">
+        <div class="social-link">f</div>
+        <div class="social-link">in</div>
+        <div class="social-link">ig</div>
+        <div class="social-link">tw</div>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#properties">Properties</a></li>
+        <li><a href="#about">About Us</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Property Types</h4>
+      <ul>
+        <li><a href="#properties">Apartments for Sale</a></li>
+        <li><a href="#properties">Apartments for Rent</a></li>
+        <li><a href="#properties">Land for Sale</a></li>
+        <li><a href="#properties">Land for Rent</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Cities</h4>
+      <ul>
+        <li><a href="#">Lagos</a></li>
+        <li><a href="#">Abuja</a></li>
+        <li><a href="#">Port Harcourt</a></li>
+        <li><a href="#">Ibadan</a></li>
+        <li><a href="#">Kaduna</a></li>
+        <li><a href="#">Kano</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2026 Heritage Realtor Nigeria. All rights reserved.</p>
+    <p>Privacy Policy · Terms of Service</p>
+  </div>
+</footer>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBg(event)">
+  <div class="modal" id="modal">
+    <div class="modal-img" id="modal-img">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <span id="modal-img-icon"></span>
+    </div>
+    <div class="modal-body">
+      <div class="modal-badges" id="modal-badges"></div>
+      <div class="modal-price" id="modal-price"></div>
+      <div class="modal-title" id="modal-title"></div>
+      <div class="modal-location" id="modal-location"></div>
+      <div class="modal-features-grid" id="modal-features-grid"></div>
+      <div class="modal-amenities" id="modal-amenities"></div>
+      <div class="modal-desc" id="modal-desc"></div>
+      <div class="modal-cta-row">
+        <button class="btn-primary" onclick="scrollToContact()">📞 Enquire Now</button>
+        <button class="btn-outline" onclick="closeModal()">← Back to Listings</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let searchMode = 'sale';
+  let visibleCount = 6;
+  let filteredList = [];
+
+  const fmt = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 });
+  const formatPrice = (price, listing) => fmt.format(price) + (listing === 'rent' ? '/yr' : '');
+
+  function bool(v) { return v === 1 || v === true; }
+
+  function createCard(p) {
+    return `
+      <div class="property-card" onclick="openModal(${p.id})">
+        <div class="card-image" style="background:${p.gradient || 'linear-gradient(135deg,#1a3c5e,#2a6496)'}">
+          <span class="img-icon">${p.icon || '🏠'}</span>
+          <span class="card-badge badge-${p.listing}">${p.listing === 'sale' ? 'For Sale' : 'For Rent'}</span>
+          <span class="badge-type">${p.type === 'apartment' ? '🏢 Apartment' : '🌿 Land'}</span>
+        </div>
+        <div class="card-body">
+          <div class="card-price">${formatPrice(p.price, p.listing)}</div>
+          <div class="card-title">${p.title}</div>
+          <div class="card-location">📍 ${p.location}</div>
+          <div class="card-features">
+            ${p.type === 'apartment' ? `
+              <div class="card-feature"><span class="icon">🛏</span> ${p.bedrooms} Bed</div>
+              <div class="card-feature"><span class="icon">🚿</span> ${p.bathrooms} Bath</div>` : ''}
+            <div class="card-feature"><span class="icon">📐</span> ${p.size}</div>
+            ${bool(p.security) ? `<div class="card-feature"><span class="icon">🔒</span> Secured</div>` : ''}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function renderCards() {
+    const grid = document.getElementById('properties-grid');
+    const shown = filteredList.slice(0, visibleCount);
+    grid.innerHTML = shown.length
+      ? shown.map(createCard).join('')
+      : '<p class="grid-loading">No properties found.</p>';
+    document.getElementById('load-more-btn').style.display =
+      filteredList.length > visibleCount ? 'inline-block' : 'none';
+  }
+
+  async function apiFetch(params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    const res = await fetch('/api/properties' + (qs ? '?' + qs : ''));
+    const json = await res.json();
+    return json.data || [];
+  }
+
+  function showLoading() {
+    document.getElementById('properties-grid').innerHTML = '<p class="grid-loading">Loading properties…</p>';
+    document.getElementById('load-more-btn').style.display = 'none';
+  }
+
+  async function filterProps(btn, filter) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    visibleCount = 6;
+    showLoading();
+
+    const params = {};
+    if (filter === 'sale' || filter === 'rent') params.listing = filter;
+    if (filter === 'apartment' || filter === 'land') params.type = filter;
+
+    filteredList = await apiFetch(params);
+    renderCards();
+  }
+
+  function loadMore() {
+    visibleCount += 3;
+    renderCards();
+  }
+
+  function setSearchTab(btn, mode) {
+    document.querySelectorAll('.search-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    searchMode = mode;
+  }
+
+  async function runSearch() {
+    const loc      = document.getElementById('search-location').value.trim();
+    const type     = document.getElementById('search-type').value;
+    const priceRng = document.getElementById('search-price').value;
+
+    const params = { listing: searchMode };
+    if (loc) params.search = loc;
+    if (type) params.type = type;
+    if (priceRng) {
+      const [min, max] = priceRng.split('-');
+      params.priceMin = min;
+      params.priceMax = max;
+    }
+
+    showLoading();
+    visibleCount = 6;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.filter-btn').classList.add('active');
+
+    filteredList = await apiFetch(params);
+    renderCards();
+    document.getElementById('properties').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  async function openModal(id) {
+    document.getElementById('modal-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('modal-img-icon').textContent = '⏳';
+    document.getElementById('modal-img').style.background = 'linear-gradient(135deg,#1a3c5e,#0d2340)';
+    document.getElementById('modal-price').textContent = '';
+    document.getElementById('modal-title').textContent = 'Loading…';
+    document.getElementById('modal-location').textContent = '';
+    document.getElementById('modal-features-grid').innerHTML = '';
+    document.getElementById('modal-amenities').innerHTML = '';
+    document.getElementById('modal-desc').textContent = '';
+
+    const res = await fetch(`/api/properties/${id}`);
+    const { data: p } = await res.json();
+    if (!p) { closeModal(); return; }
+
+    document.getElementById('modal-img').style.background = p.gradient || 'linear-gradient(135deg,#1a3c5e,#2a6496)';
+    document.getElementById('modal-img-icon').textContent = p.icon || '🏠';
+    document.getElementById('modal-price').textContent = formatPrice(p.price, p.listing);
+    document.getElementById('modal-title').textContent = p.title;
+    document.getElementById('modal-location').textContent = '📍 ' + p.location;
+    document.getElementById('modal-badges').innerHTML = `
+      <span class="card-badge badge-${p.listing}" style="position:static">${p.listing === 'sale' ? 'For Sale' : 'For Rent'}</span>
+      <span class="badge-type" style="position:static;background:var(--primary)">${p.type === 'apartment' ? '🏢 Apartment' : '🌿 Land'}</span>`;
+
+    let features = `<div class="modal-feature"><div class="mf-icon">📐</div><div class="mf-val">${p.size}</div><div class="mf-key">Plot Size</div></div>`;
+    if (p.type === 'apartment') {
+      features = `
+        <div class="modal-feature"><div class="mf-icon">🛏</div><div class="mf-val">${p.bedrooms}</div><div class="mf-key">Bedrooms</div></div>
+        <div class="modal-feature"><div class="mf-icon">🚿</div><div class="mf-val">${p.bathrooms}</div><div class="mf-key">Bathrooms</div></div>` + features;
+    }
+    document.getElementById('modal-features-grid').innerHTML = features;
+
+    const amenities = [
+      bool(p.parking)   && 'Parking Space',
+      bool(p.pool)      && 'Swimming Pool',
+      bool(p.gym)       && 'Gym',
+      bool(p.security)  && '24/7 Security',
+      bool(p.furnished) && 'Furnished',
+    ].filter(Boolean);
+    document.getElementById('modal-amenities').innerHTML = amenities.length ? `
+      <h4>Amenities</h4>
+      <div class="amenity-list">${amenities.map(a => `<span class="amenity-tag">✓ ${a}</span>`).join('')}</div>` : '';
+
+    document.getElementById('modal-desc').textContent = p.description || '';
+  }
+
+  function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  function closeModalOnBg(e) {
+    if (e.target === document.getElementById('modal-overlay')) closeModal();
+  }
+
+  function scrollToContact() {
+    closeModal();
+    setTimeout(() => document.getElementById('contact').scrollIntoView({ behavior: 'smooth' }), 200);
+  }
+
+  async function submitForm() {
+    const name         = document.getElementById('f-name').value.trim();
+    const phone        = document.getElementById('f-phone').value.trim();
+    const email        = document.getElementById('f-email').value.trim();
+    const interest     = document.getElementById('f-interest').value;
+    const property_type = document.getElementById('f-type').value;
+    const message      = document.getElementById('f-message').value.trim();
+
+    if (!name || !phone) { alert('Please fill in your name and phone number.'); return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+
+    try {
+      const res = await fetch('/api/enquiries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, phone, email, interest, property_type, message }),
+      });
+
+      if (res.ok) {
+        document.getElementById('form-success').style.display = 'block';
+        ['f-name','f-phone','f-email','f-message'].forEach(id => document.getElementById(id).value = '');
+        setTimeout(() => document.getElementById('form-success').style.display = 'none', 5000);
+      } else {
+        alert('Submission failed. Please try again.');
+      }
+    } catch {
+      alert('Network error. Please check your connection and try again.');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Send Enquiry';
+    }
+  }
+
+  function toggleMobileMenu() {
+    const links = document.querySelector('.nav-links');
+    const cta   = document.querySelector('.nav-cta');
+    if (links.style.display === 'flex') {
+      links.style.display = ''; cta.style.display = '';
+    } else {
+      links.style.cssText = 'display:flex;flex-direction:column;position:absolute;top:70px;left:0;right:0;background:#1a3c5e;padding:20px 5%;gap:16px;z-index:999';
+      cta.style.display = 'block';
+    }
+  }
+
+  // Boot: load all properties on page start
+  apiFetch().then(data => { filteredList = data; renderCards(); });
+</script>
+</body>
+</html>
