@@ -75,6 +75,8 @@
     .card-badge { position: absolute; top: 14px; left: 14px; padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
     .badge-sale { background: #e74c3c; color: white; }
     .badge-rent { background: #27ae60; color: white; }
+    .badge-lease { background: #8e44ad; color: white; }
+    .badge-jv { background: #e67e22; color: white; }
     .badge-type { position: absolute; top: 14px; right: 14px; background: rgba(0,0,0,0.5); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
     .card-body { padding: 20px; }
     .card-price { font-size: 1.35rem; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
@@ -260,6 +262,8 @@
     <button class="filter-btn active" onclick="filterProps(this,'all')">All</button>
     <button class="filter-btn" onclick="filterProps(this,'sale')">For Sale</button>
     <button class="filter-btn" onclick="filterProps(this,'rent')">For Rent</button>
+    <button class="filter-btn" onclick="filterProps(this,'lease')">For Lease</button>
+    <button class="filter-btn" onclick="filterProps(this,'jv')">JV</button>
     <button class="filter-btn" onclick="filterProps(this,'apartment')">Apartments</button>
     <button class="filter-btn" onclick="filterProps(this,'land')">Land</button>
   </div>
@@ -325,24 +329,24 @@
       <div class="stars">★★★★★</div>
       <p class="testimonial-text">"Heritage Realtor made buying my first apartment in Lagos incredibly easy. The agents were professional and guided me every step of the way. Highly recommended!"</p>
       <div class="reviewer">
-        <div class="reviewer-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2)">AO</div>
-        <div><div class="reviewer-name">Adaeze Okonkwo</div><div class="reviewer-role">Property Buyer, Lagos</div></div>
+        <div class="reviewer-avatar" style="background:linear-gradient(135deg,#667eea,#764ba2)">MH</div>
+        <div><div class="reviewer-name">Muhammed Hassan</div><div class="reviewer-role">Property Buyer, Lagos</div></div>
       </div>
     </div>
     <div class="testimonial-card">
       <div class="stars">★★★★★</div>
       <p class="testimonial-text">"I rented a beautiful apartment in Abuja through Heritage Realtor. The process was smooth, transparent, and the property was exactly as described. Great service!"</p>
       <div class="reviewer">
-        <div class="reviewer-avatar" style="background:linear-gradient(135deg,#f093fb,#f5576c)">BM</div>
-        <div><div class="reviewer-name">Babatunde Musa</div><div class="reviewer-role">Tenant, Abuja</div></div>
+        <div class="reviewer-avatar" style="background:linear-gradient(135deg,#f093fb,#f5576c)">BI</div>
+        <div><div class="reviewer-name">Babatunde Ishola</div><div class="reviewer-role">Tenant, Abuja</div></div>
       </div>
     </div>
     <div class="testimonial-card">
       <div class="stars">★★★★★</div>
       <p class="testimonial-text">"Sold my land in Port Harcourt within 2 weeks! The team was responsive and handled all the paperwork efficiently. Best real estate company I've worked with."</p>
       <div class="reviewer">
-        <div class="reviewer-avatar" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">CE</div>
-        <div><div class="reviewer-name">Chioma Eze</div><div class="reviewer-role">Land Seller, Port Harcourt</div></div>
+        <div class="reviewer-avatar" style="background:linear-gradient(135deg,#4facfe,#00f2fe)">CA</div>
+        <div><div class="reviewer-name">Chioma Anyanwu</div><div class="reviewer-role">Land Seller, Port Harcourt</div></div>
       </div>
     </div>
   </div>
@@ -374,6 +378,8 @@
           <select id="f-interest">
             <option>Buying a Property</option>
             <option>Renting a Property</option>
+            <option>Leasing a Property</option>
+            <option>JV Partnership</option>
             <option>Selling a Property</option>
             <option>Property Valuation</option>
           </select>
@@ -420,6 +426,8 @@
       <ul>
         <li><a href="#properties">Apartments for Sale</a></li>
         <li><a href="#properties">Apartments for Rent</a></li>
+        <li><a href="#properties">For Lease</a></li>
+        <li><a href="#properties">JV Properties</a></li>
         <li><a href="#properties">Land for Sale</a></li>
         <li><a href="#properties">Land for Rent</a></li>
       </ul>
@@ -470,7 +478,8 @@
   let filteredList = [];
 
   const fmt = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 });
-  const formatPrice = (price, listing) => fmt.format(price) + (listing === 'rent' ? '/yr' : '');
+  const listingLabel = l => ({ sale:'For Sale', rent:'For Rent', lease:'For Lease', jv:'JV' }[l] || l);
+  const formatPrice = (price, listing) => fmt.format(price) + (listing === 'rent' || listing === 'lease' ? '/yr' : '');
 
   function bool(v) { return v === 1 || v === true; }
 
@@ -479,7 +488,7 @@
       <div class="property-card" onclick="openModal(${p.id})">
         <div class="card-image" style="background:${p.gradient || 'linear-gradient(135deg,#1a3c5e,#2a6496)'}">
           <span class="img-icon">${p.icon || '🏠'}</span>
-          <span class="card-badge badge-${p.listing}">${p.listing === 'sale' ? 'For Sale' : 'For Rent'}</span>
+          <span class="card-badge badge-${p.listing}">${listingLabel(p.listing)}</span>
           <span class="badge-type">${p.type === 'apartment' ? '🏢 Apartment' : '🌿 Land'}</span>
         </div>
         <div class="card-body">
@@ -526,7 +535,7 @@
     showLoading();
 
     const params = {};
-    if (filter === 'sale' || filter === 'rent') params.listing = filter;
+    if (['sale','rent','lease','jv'].includes(filter)) params.listing = filter;
     if (filter === 'apartment' || filter === 'land') params.type = filter;
 
     filteredList = await apiFetch(params);
@@ -590,7 +599,7 @@
     document.getElementById('modal-title').textContent = p.title;
     document.getElementById('modal-location').textContent = '📍 ' + p.location;
     document.getElementById('modal-badges').innerHTML = `
-      <span class="card-badge badge-${p.listing}" style="position:static">${p.listing === 'sale' ? 'For Sale' : 'For Rent'}</span>
+      <span class="card-badge badge-${p.listing}" style="position:static">${listingLabel(p.listing)}</span>
       <span class="badge-type" style="position:static;background:var(--primary)">${p.type === 'apartment' ? '🏢 Apartment' : '🌿 Land'}</span>`;
 
     let features = `<div class="modal-feature"><div class="mf-icon">📐</div><div class="mf-val">${p.size}</div><div class="mf-key">Plot Size</div></div>`;
