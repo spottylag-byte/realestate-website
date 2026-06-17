@@ -320,7 +320,7 @@
         </div>
         <div class="fg">
           <label>Listing *</label>
-          <select id="p-listing">
+          <select id="p-listing" onchange="toggleShortletFields()">
             <option value="sale">For Sale</option>
             <option value="rent">For Rent</option>
             <option value="shortlet">Shortlet</option>
@@ -330,7 +330,24 @@
         </div>
         <div class="fg"><label>Price (₦) *</label><input id="p-price" type="number" placeholder="e.g. 45000000" /></div>
         <div class="fg"><label>Location *</label><input id="p-location" type="text" placeholder="e.g. Victoria Island, Lagos" /></div>
-        <div class="fg"><label>Size *</label><input id="p-size" type="text" placeholder="e.g. 180 sqm" /></div>
+        <div class="fg normal-field"><label>Size *</label><input id="p-size" type="text" placeholder="e.g. 180 sqm" /></div>
+        <div class="fg shortlet-field" style="display:none">
+          <label>Building Style *</label>
+          <select id="p-building-style">
+            <option value="apartment">Apartment / Flat</option>
+            <option value="duplex">Duplex</option>
+            <option value="bungalow">Bungalow</option>
+            <option value="self-contained">Self-Contained</option>
+          </select>
+        </div>
+        <div class="fg shortlet-field" style="display:none">
+          <label>Occupancy / Privacy *</label>
+          <select id="p-occupancy-type">
+            <option value="entire">Entire Place</option>
+            <option value="private_room">Private Room</option>
+            <option value="shared">Shared Room / Facilities</option>
+          </select>
+        </div>
         <div class="fg apt-field"><label>Bedrooms</label><input id="p-beds" type="number" min="0" /></div>
         <div class="fg apt-field"><label>Bathrooms</label><input id="p-baths" type="number" min="0" /></div>
         <div class="fg f-full">
@@ -549,6 +566,12 @@
     document.querySelectorAll('.apt-field').forEach(el => el.style.display = isApt ? '' : 'none');
   }
 
+  function toggleShortletFields() {
+    const isShortlet = document.getElementById('p-listing').value === 'shortlet';
+    document.querySelectorAll('.shortlet-field').forEach(el => el.style.display = isShortlet ? '' : 'none');
+    document.querySelectorAll('.normal-field').forEach(el => el.style.display = isShortlet ? 'none' : '');
+  }
+
   /* ── MEDIA UPLOAD ── */
   let uploadedImages = [];
 
@@ -599,6 +622,9 @@
     });
     document.getElementById('p-type').value    = 'apartment';
     document.getElementById('p-listing').value = 'sale';
+    document.getElementById('p-building-style').value = 'apartment';
+    document.getElementById('p-occupancy-type').value = 'entire';
+    toggleShortletFields();
     ['p-parking','p-pool','p-gym','p-security','p-furnished','p-verified','p-pay-monthly'].forEach(id => {
       document.getElementById(id).checked = false;
     });
@@ -626,6 +652,9 @@
       document.getElementById('p-price').value    = p.price;
       document.getElementById('p-location').value = p.location;
       document.getElementById('p-size').value     = p.size;
+      document.getElementById('p-building-style').value = p.building_style || 'apartment';
+      document.getElementById('p-occupancy-type').value = p.occupancy_type || 'entire';
+      toggleShortletFields();
       document.getElementById('p-beds').value     = p.bedrooms  ?? '';
       document.getElementById('p-baths').value    = p.bathrooms ?? '';
       document.getElementById('p-parking').checked   = p.parking   === 1;
@@ -656,15 +685,19 @@
   }
 
   async function saveProp() {
-    const id   = document.getElementById('p-id').value;
-    const type = document.getElementById('p-type').value;
+    const id       = document.getElementById('p-id').value;
+    const type     = document.getElementById('p-type').value;
+    const listing  = document.getElementById('p-listing').value;
+    const isShortlet = listing === 'shortlet';
     const body = {
       title:       document.getElementById('p-title').value.trim(),
       type,
-      listing:     document.getElementById('p-listing').value,
+      listing,
       price:       parseInt(document.getElementById('p-price').value),
       location:    document.getElementById('p-location').value.trim(),
-      size:        document.getElementById('p-size').value.trim(),
+      size:        isShortlet ? '' : document.getElementById('p-size').value.trim(),
+      building_style: isShortlet ? document.getElementById('p-building-style').value : null,
+      occupancy_type: isShortlet ? document.getElementById('p-occupancy-type').value : null,
       bedrooms:    type === 'apartment' ? (parseInt(document.getElementById('p-beds').value)  || null) : null,
       bathrooms:   type === 'apartment' ? (parseInt(document.getElementById('p-baths').value) || null) : null,
       parking:     document.getElementById('p-parking').checked   ? 1 : 0,
@@ -679,7 +712,13 @@
       description: document.getElementById('p-desc').value.trim(),
       images:      uploadedImages,
     };
-    if (!body.title || !body.price || !body.location || !body.size) {
+    if (!body.title || !body.price || !body.location) {
+      toast('Please fill in all required fields.', 'err'); return;
+    }
+    if (isShortlet && (!body.building_style || !body.occupancy_type)) {
+      toast('Please select building style and occupancy type.', 'err'); return;
+    }
+    if (!isShortlet && !body.size) {
       toast('Please fill in all required fields.', 'err'); return;
     }
     const res = await api(id ? 'PUT' : 'POST', id ? `/api/properties/${id}` : '/api/properties', body);

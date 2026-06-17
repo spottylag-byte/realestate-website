@@ -31,6 +31,8 @@ db.exec(`
     description TEXT,
     verified    INTEGER DEFAULT 0,
     pay_monthly INTEGER DEFAULT 0,
+    building_style TEXT,
+    occupancy_type TEXT,
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -58,6 +60,12 @@ if (!cols.includes('verified')) {
 }
 if (!cols.includes('pay_monthly')) {
   db.exec("ALTER TABLE properties ADD COLUMN pay_monthly INTEGER DEFAULT 0");
+}
+if (!cols.includes('building_style')) {
+  db.exec("ALTER TABLE properties ADD COLUMN building_style TEXT");
+}
+if (!cols.includes('occupancy_type')) {
+  db.exec("ALTER TABLE properties ADD COLUMN occupancy_type TEXT");
 }
 
 // Migrate CHECK constraint to include 'shortlet' if not already done
@@ -87,6 +95,8 @@ if (tblSql && !tblSql.sql.includes('shortlet')) {
       images      TEXT    DEFAULT '[]',
       verified    INTEGER DEFAULT 0,
       pay_monthly INTEGER DEFAULT 0,
+      building_style TEXT,
+      occupancy_type TEXT,
       created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     INSERT INTO properties_new (id,title,type,listing,price,location,bedrooms,bathrooms,size,parking,pool,gym,security,furnished,gradient,icon,description,images,created_at)

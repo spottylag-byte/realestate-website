@@ -512,6 +512,8 @@
   const fmt = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 });
   const listingLabel = l => ({ sale:'For Sale', rent:'For Rent', lease:'For Lease', jv:'JV', shortlet:'Shortlet' }[l] || l);
   const formatPrice = (price, listing) => fmt.format(price) + (listing === 'shortlet' ? '/night' : listing === 'rent' || listing === 'lease' ? '/yr' : '');
+  const buildingStyleLabel = s => ({ apartment:'Apartment/Flat', duplex:'Duplex', bungalow:'Bungalow', 'self-contained':'Self-Contained' }[s] || s);
+  const occupancyLabel = o => ({ entire:'Entire Place', private_room:'Private Room', shared:'Shared Room/Facilities' }[o] || o);
 
   function bool(v) { return v === 1 || v === true; }
 
@@ -540,7 +542,10 @@
             ${p.type === 'apartment' ? `
               <div class="card-feature"><span class="icon">🛏</span> ${p.bedrooms} Bed</div>
               <div class="card-feature"><span class="icon">🚿</span> ${p.bathrooms} Bath</div>` : ''}
-            <div class="card-feature"><span class="icon">📐</span> ${p.size}</div>
+            ${p.listing === 'shortlet'
+              ? `<div class="card-feature"><span class="icon">🏗️</span> ${buildingStyleLabel(p.building_style)}</div>
+                 <div class="card-feature"><span class="icon">🔑</span> ${occupancyLabel(p.occupancy_type)}</div>`
+              : `<div class="card-feature"><span class="icon">📐</span> ${p.size}</div>`}
             ${bool(p.security) ? `<div class="card-feature"><span class="icon">🔒</span> Secured</div>` : ''}
           </div>
         </div>
@@ -594,7 +599,7 @@
     searchMode = mode;
     const isShortlet = mode === 'shortlet';
     document.querySelectorAll('.sf-normal').forEach(el => el.style.display = isShortlet ? 'none' : '');
-    document.querySelectorAll('.sf-shortlet').forEach(el => el.style.display = isShortlet ? '' : 'none');
+    document.querySelectorAll('.sf-shortlet').forEach(el => el.style.display = isShortlet ? 'block' : 'none');
   }
 
   async function runSearch() {
@@ -670,7 +675,10 @@
       document.getElementById('modal-price').insertAdjacentHTML('beforebegin', `<div class="tag-monthly">💳 Pay Monthly Available</div>`);
     }
 
-    let features = `<div class="modal-feature"><div class="mf-icon">📐</div><div class="mf-val">${p.size}</div><div class="mf-key">Plot Size</div></div>`;
+    let features = p.listing === 'shortlet'
+      ? `<div class="modal-feature"><div class="mf-icon">🏗️</div><div class="mf-val">${buildingStyleLabel(p.building_style)}</div><div class="mf-key">Building Style</div></div>
+         <div class="modal-feature"><div class="mf-icon">🔑</div><div class="mf-val">${occupancyLabel(p.occupancy_type)}</div><div class="mf-key">Occupancy</div></div>`
+      : `<div class="modal-feature"><div class="mf-icon">📐</div><div class="mf-val">${p.size}</div><div class="mf-key">Plot Size</div></div>`;
     if (p.type === 'apartment') {
       features = `
         <div class="modal-feature"><div class="mf-icon">🛏</div><div class="mf-val">${p.bedrooms}</div><div class="mf-key">Bedrooms</div></div>
