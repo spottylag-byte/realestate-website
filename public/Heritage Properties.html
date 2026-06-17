@@ -57,6 +57,7 @@
     .btn-whatsapp { flex: 1; padding: 13px; background: #25D366; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
     .btn-whatsapp:hover { background: #128C7E; }
     .search-fields { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; }
+    .sf-shortlet { display: none; }
     .search-fields select, .search-fields input { padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.95rem; color: var(--text); outline: none; transition: border-color 0.2s; }
     .search-fields select:focus, .search-fields input:focus { border-color: var(--primary); }
     .search-btn { padding: 12px 28px; background: var(--accent); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
@@ -88,6 +89,8 @@
     .badge-jv { background: #e67e22; color: white; }
     .badge-shortlet { background: #0097a7; color: white; }
     .badge-type { position: absolute; top: 14px; right: 14px; background: rgba(0,0,0,0.5); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
+    .badge-verified { position: absolute; bottom: 14px; left: 14px; background: #2980b9; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.76rem; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+    .tag-monthly { display: inline-flex; align-items: center; gap: 4px; background: rgba(39,174,96,0.12); color: #1e8449; padding: 4px 10px; border-radius: 14px; font-size: 0.78rem; font-weight: 700; margin-bottom: 8px; }
     .card-body { padding: 20px; }
     .card-price { font-size: 1.35rem; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
     .card-price .per { font-size: 0.85rem; font-weight: 500; color: var(--muted); }
@@ -244,18 +247,20 @@
       </div>
       <div class="search-fields">
         <input type="text" id="search-location" placeholder="📍 Enter location..." />
-        <select id="search-type">
+        <select id="search-type" class="sf-normal">
           <option value="">All Property Types</option>
           <option value="apartment">Apartment</option>
           <option value="land">Land</option>
         </select>
-        <select id="search-price">
+        <select id="search-price" class="sf-normal">
           <option value="">Any Price Range</option>
           <option value="0-5000000">Under ₦5M</option>
           <option value="5000000-20000000">₦5M – ₦20M</option>
           <option value="20000000-50000000">₦20M – ₦50M</option>
           <option value="50000000-999999999">Above ₦50M</option>
         </select>
+        <input type="date" id="search-checkin" class="sf-shortlet" title="Check-in date" />
+        <input type="date" id="search-checkout" class="sf-shortlet" title="Check-out date" />
         <button class="search-btn" onclick="runSearch()">🔍 Search</button>
       </div>
     </div>
@@ -501,6 +506,8 @@
   let filteredList = [];
   let currentProp = null;
   let waNumber = '2347031946419';
+  let shortletCheckin = '';
+  let shortletCheckout = '';
 
   const fmt = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 });
   const listingLabel = l => ({ sale:'For Sale', rent:'For Rent', lease:'For Lease', jv:'JV', shortlet:'Shortlet' }[l] || l);
@@ -522,8 +529,10 @@
             : `<span class="img-icon">${p.icon || '🏠'}</span>`}
           <span class="card-badge badge-${p.listing}">${listingLabel(p.listing)}</span>
           <span class="badge-type">${p.type === 'apartment' ? '🏢 Apartment' : '🌿 Land'}</span>
+          ${bool(p.verified) ? `<span class="badge-verified">✓ Verified</span>` : ''}
         </div>
         <div class="card-body">
+          ${bool(p.pay_monthly) ? `<div class="tag-monthly">💳 Pay Monthly Available</div>` : ''}
           <div class="card-price">${formatPrice(p.price, p.listing)}</div>
           <div class="card-title">${p.title}</div>
           <div class="card-location">📍 ${p.location}</div>
@@ -583,6 +592,9 @@
     document.querySelectorAll('.search-tab').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     searchMode = mode;
+    const isShortlet = mode === 'shortlet';
+    document.querySelectorAll('.sf-normal').forEach(el => el.style.display = isShortlet ? 'none' : '');
+    document.querySelectorAll('.sf-shortlet').forEach(el => el.style.display = isShortlet ? '' : 'none');
   }
 
   async function runSearch() {
@@ -592,11 +604,16 @@
 
     const params = { listing: searchMode };
     if (loc) params.search = loc;
-    if (type) params.type = type;
-    if (priceRng) {
-      const [min, max] = priceRng.split('-');
-      params.priceMin = min;
-      params.priceMax = max;
+    if (searchMode === 'shortlet') {
+      shortletCheckin  = document.getElementById('search-checkin').value;
+      shortletCheckout = document.getElementById('search-checkout').value;
+    } else {
+      if (type) params.type = type;
+      if (priceRng) {
+        const [min, max] = priceRng.split('-');
+        params.priceMin = min;
+        params.priceMax = max;
+      }
     }
 
     showLoading();
@@ -612,6 +629,7 @@
   async function openModal(id) {
     document.getElementById('modal-overlay').classList.add('open');
     document.body.style.overflow = 'hidden';
+    document.querySelectorAll('.modal-body .tag-monthly').forEach(el => el.remove());
     const modalImgEl = document.getElementById('modal-img');
     modalImgEl.style.background = 'linear-gradient(135deg,#1a3c5e,#0d2340)';
     modalImgEl.innerHTML = `<button class="modal-close" onclick="closeModal()">✕</button><span id="modal-img-icon">⏳</span>`;
@@ -646,7 +664,11 @@
     document.getElementById('modal-location').textContent = '📍 ' + p.location;
     document.getElementById('modal-badges').innerHTML = `
       <span class="card-badge badge-${p.listing}">${listingLabel(p.listing)}</span>
-      <span class="badge-type" style="background:var(--primary)">${p.type === 'apartment' ? '🏢 Apartment' : '🌿 Land'}</span>`;
+      <span class="badge-type" style="background:var(--primary)">${p.type === 'apartment' ? '🏢 Apartment' : '🌿 Land'}</span>
+      ${bool(p.verified) ? `<span class="badge-verified" style="position:static">✓ Verified</span>` : ''}`;
+    if (bool(p.pay_monthly)) {
+      document.getElementById('modal-price').insertAdjacentHTML('beforebegin', `<div class="tag-monthly">💳 Pay Monthly Available</div>`);
+    }
 
     let features = `<div class="modal-feature"><div class="mf-icon">📐</div><div class="mf-val">${p.size}</div><div class="mf-key">Plot Size</div></div>`;
     if (p.type === 'apartment') {
@@ -693,9 +715,16 @@
 
   function openWhatsApp() {
     const num = waNumber.replace(/\D/g, '');
-    const text = currentProp
-      ? `Hi Heritage Realtor, I'm interested in: *${currentProp.title}* at ${currentProp.location}. Please send more details.`
-      : `Hi Heritage Realtor, I'd like to enquire about a property.`;
+    let text;
+    if (currentProp) {
+      text = `Hi Heritage Realtor, I'm interested in: *${currentProp.title}* at ${currentProp.location}.`;
+      if (currentProp.listing === 'shortlet' && shortletCheckin && shortletCheckout) {
+        text += ` Check-in: ${shortletCheckin}, Check-out: ${shortletCheckout}.`;
+      }
+      text += ' Please send more details.';
+    } else {
+      text = `Hi Heritage Realtor, I'd like to enquire about a property.`;
+    }
     window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, '_blank');
   }
 

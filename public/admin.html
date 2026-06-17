@@ -344,6 +344,13 @@
           </div>
         </div>
         <div class="fg f-full">
+          <label>Listing Highlights</label>
+          <div class="checks">
+            <label class="chk"><input type="checkbox" id="p-verified"> ✓ Verified Property</label>
+            <label class="chk"><input type="checkbox" id="p-pay-monthly"> 💳 Pay Monthly Available</label>
+          </div>
+        </div>
+        <div class="fg f-full">
           <label>Colour Theme</label>
           <div class="grad-grid" id="grad-picker"></div>
           <input type="hidden" id="p-gradient" />
@@ -502,7 +509,7 @@
     }
     document.getElementById('prop-tbody').innerHTML = props.map(p => `
       <tr>
-        <td><strong>${esc(p.title)}</strong></td>
+        <td><strong>${esc(p.title)}</strong> ${p.verified ? '<span title="Verified">✓</span>' : ''}${p.pay_monthly ? ' <span title="Pay Monthly Available">💳</span>' : ''}</td>
         <td><span class="badge badge-${p.type}">${p.type}</span></td>
         <td><span class="badge badge-${p.listing}">${{sale:'Sale',rent:'Rent',shortlet:'Shortlet',lease:'Lease',jv:'JV'}[p.listing]||p.listing}</span></td>
         <td>${fmt.format(p.price)}${p.listing === 'shortlet' ? '/night' : (p.listing === 'rent' || p.listing === 'lease') ? '/yr' : ''}</td>
@@ -592,7 +599,7 @@
     });
     document.getElementById('p-type').value    = 'apartment';
     document.getElementById('p-listing').value = 'sale';
-    ['p-parking','p-pool','p-gym','p-security','p-furnished'].forEach(id => {
+    ['p-parking','p-pool','p-gym','p-security','p-furnished','p-verified','p-pay-monthly'].forEach(id => {
       document.getElementById(id).checked = false;
     });
     const defGrad = GRADIENTS[0].css;
@@ -626,6 +633,8 @@
       document.getElementById('p-gym').checked        = p.gym       === 1;
       document.getElementById('p-security').checked   = p.security  === 1;
       document.getElementById('p-furnished').checked  = p.furnished === 1;
+      document.getElementById('p-verified').checked    = p.verified    === 1;
+      document.getElementById('p-pay-monthly').checked = p.pay_monthly === 1;
       document.getElementById('p-desc').value     = p.description || '';
       const grad = p.gradient || GRADIENTS[0].css;
       const icon = p.icon || '🏢';
@@ -663,6 +672,8 @@
       gym:         document.getElementById('p-gym').checked       ? 1 : 0,
       security:    document.getElementById('p-security').checked  ? 1 : 0,
       furnished:   type === 'apartment' && document.getElementById('p-furnished').checked ? 1 : 0,
+      verified:    document.getElementById('p-verified').checked    ? 1 : 0,
+      pay_monthly: document.getElementById('p-pay-monthly').checked ? 1 : 0,
       gradient:    document.getElementById('p-gradient').value,
       icon:        document.getElementById('p-icon').value,
       description: document.getElementById('p-desc').value.trim(),

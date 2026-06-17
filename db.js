@@ -29,6 +29,8 @@ db.exec(`
     gradient    TEXT,
     icon        TEXT,
     description TEXT,
+    verified    INTEGER DEFAULT 0,
+    pay_monthly INTEGER DEFAULT 0,
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -50,6 +52,12 @@ db.exec(`
 const cols = db.prepare("PRAGMA table_info(properties)").all().map(c => c.name);
 if (!cols.includes('images')) {
   db.exec("ALTER TABLE properties ADD COLUMN images TEXT DEFAULT '[]'");
+}
+if (!cols.includes('verified')) {
+  db.exec("ALTER TABLE properties ADD COLUMN verified INTEGER DEFAULT 0");
+}
+if (!cols.includes('pay_monthly')) {
+  db.exec("ALTER TABLE properties ADD COLUMN pay_monthly INTEGER DEFAULT 0");
 }
 
 // Migrate CHECK constraint to include 'shortlet' if not already done
@@ -77,9 +85,12 @@ if (tblSql && !tblSql.sql.includes('shortlet')) {
       icon        TEXT,
       description TEXT,
       images      TEXT    DEFAULT '[]',
+      verified    INTEGER DEFAULT 0,
+      pay_monthly INTEGER DEFAULT 0,
       created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
     );
-    INSERT INTO properties_new SELECT * FROM properties;
+    INSERT INTO properties_new (id,title,type,listing,price,location,bedrooms,bathrooms,size,parking,pool,gym,security,furnished,gradient,icon,description,images,created_at)
+      SELECT id,title,type,listing,price,location,bedrooms,bathrooms,size,parking,pool,gym,security,furnished,gradient,icon,description,images,created_at FROM properties;
     DROP TABLE properties;
     ALTER TABLE properties_new RENAME TO properties;
   `);

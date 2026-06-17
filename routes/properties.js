@@ -35,7 +35,8 @@ router.get('/:id', (req, res) => {
 // POST /api/properties
 router.post('/', requireAdmin, (req, res) => {
   const { title, type, listing, price, location, bedrooms, bathrooms, size,
-          parking, pool, gym, security, furnished, gradient, icon, description, images } = req.body;
+          parking, pool, gym, security, furnished, gradient, icon, description, images,
+          verified, pay_monthly } = req.body;
 
   if (!title || !type || !listing || !price || !location || !size) {
     return res.status(400).json({ success: false, message: 'title, type, listing, price, location and size are required' });
@@ -45,11 +46,12 @@ router.post('/', requireAdmin, (req, res) => {
 
   const result = db.prepare(`
     INSERT INTO properties
-      (title, type, listing, price, location, bedrooms, bathrooms, size, parking, pool, gym, security, furnished, gradient, icon, description, images)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (title, type, listing, price, location, bedrooms, bathrooms, size, parking, pool, gym, security, furnished, gradient, icon, description, images, verified, pay_monthly)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(title, type, listing, price, location, bedrooms ?? null, bathrooms ?? null, size,
          parking ? 1 : 0, pool ? 1 : 0, gym ? 1 : 0, security ? 1 : 0, furnished ? 1 : 0,
-         gradient ?? null, icon ?? null, description ?? null, imagesJson);
+         gradient ?? null, icon ?? null, description ?? null, imagesJson,
+         verified ? 1 : 0, pay_monthly ? 1 : 0);
 
   const property = db.prepare('SELECT * FROM properties WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json({ success: true, data: property });
@@ -61,15 +63,17 @@ router.put('/:id', requireAdmin, (req, res) => {
   if (!existing) return res.status(404).json({ success: false, message: 'Property not found' });
 
   const allowed = ['title','type','listing','price','location','bedrooms','bathrooms','size',
-                   'parking','pool','gym','security','furnished','gradient','icon','description','images'];
+                   'parking','pool','gym','security','furnished','gradient','icon','description','images',
+                   'verified','pay_monthly'];
   const sets = [], params = [];
 
+  const boolFields = ['parking','pool','gym','security','furnished','verified','pay_monthly'];
   for (const field of allowed) {
     if (req.body[field] !== undefined) {
       sets.push(`${field} = ?`);
-      const val = field === 'images' && Array.isArray(req.body[field])
-        ? JSON.stringify(req.body[field])
-        : req.body[field];
+      let val = req.body[field];
+      if (field === 'images' && Array.isArray(val)) val = JSON.stringify(val);
+      else if (boolFields.includes(field)) val = val ? 1 : 0;
       params.push(val);
     }
   }
