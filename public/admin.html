@@ -115,6 +115,17 @@
     .chk { display: flex; align-items: center; gap: 6px; font-size: .86rem; cursor: pointer; user-select: none; }
     .chk input { width: 15px; height: 15px; accent-color: var(--primary); cursor: pointer; }
 
+    /* ── MEDIA UPLOAD ── */
+    .upload-area { border: 2px dashed var(--border); border-radius: 10px; padding: 24px; text-align: center; cursor: pointer; transition: border-color .2s, background .2s; margin-top: 4px; }
+    .upload-area:hover, .upload-area.dragover { border-color: var(--primary); background: rgba(26,60,94,.04); }
+    .upload-area p { color: var(--muted); font-size: .88rem; margin-top: 6px; }
+    .upload-icon { font-size: 2rem; }
+    .media-preview { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+    .media-thumb { position: relative; width: 90px; height: 90px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: #000; }
+    .media-thumb img, .media-thumb video { width: 100%; height: 100%; object-fit: cover; }
+    .media-thumb .remove-btn { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,.65); color: white; border: none; font-size: .7rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    #media-input { display: none; }
+
     /* ── GRADIENT PICKER ── */
     .grad-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
     .grad-swatch { width: 34px; height: 34px; border-radius: 8px; cursor: pointer; border: 3px solid transparent; transition: transform .15s, border-color .15s; }
@@ -340,6 +351,16 @@
           <div class="icon-grid" id="icon-picker"></div>
           <input type="hidden" id="p-icon" />
         </div>
+        <div class="fg f-full">
+          <label>Photos & Videos</label>
+          <div class="upload-area" id="upload-area" onclick="document.getElementById('media-input').click()" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+            <div class="upload-icon">📸</div>
+            <strong>Click to upload or drag & drop</strong>
+            <p>Images (JPG, PNG, WEBP) or Videos (MP4, MOV) — max 50MB each</p>
+          </div>
+          <input type="file" id="media-input" multiple accept="image/*,video/*" onchange="handleFileSelect(event)" />
+          <div class="media-preview" id="media-preview"></div>
+        </div>
         <div class="fg f-full"><label>Description</label><textarea id="p-desc" placeholder="Describe the property…"></textarea></div>
       </div>
       <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end">
@@ -517,6 +538,50 @@
     document.querySelectorAll('.apt-field').forEach(el => el.style.display = isApt ? '' : 'none');
   }
 
+  /* ── MEDIA UPLOAD ── */
+  let uploadedImages = [];
+
+  function renderMediaPreview() {
+    document.getElementById('media-preview').innerHTML = uploadedImages.map((url, i) => {
+      const isVideo = /\.(mp4|mov|webm|avi)$/i.test(url);
+      return `<div class="media-thumb">
+        ${isVideo
+          ? `<video src="${url}" muted></video>`
+          : `<img src="${url}" alt="media ${i+1}" />`}
+        <button class="remove-btn" onclick="removeMedia(${i})">✕</button>
+      </div>`;
+    }).join('');
+  }
+
+  async function removeMedia(index) {
+    const url = uploadedImages[index];
+    await api('DELETE', '/api/upload', { url });
+    uploadedImages.splice(index, 1);
+    renderMediaPreview();
+  }
+
+  async function uploadFiles(files) {
+    const formData = new FormData();
+    [...files].forEach(f => formData.append('files', f));
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${sessionPwd}` },
+      body: formData,
+    });
+    const json = await res.json();
+    if (json.success) {
+      uploadedImages.push(...json.urls);
+      renderMediaPreview();
+    } else {
+      toast('Upload failed.', 'err');
+    }
+  }
+
+  function handleFileSelect(e) { if (e.target.files.length) uploadFiles(e.target.files); }
+  function handleDragOver(e)   { e.preventDefault(); document.getElementById('upload-area').classList.add('dragover'); }
+  function handleDragLeave()   { document.getElementById('upload-area').classList.remove('dragover'); }
+  function handleDrop(e)       { e.preventDefault(); handleDragLeave(); if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files); }
+
   function resetPropForm() {
     ['p-id','p-title','p-price','p-location','p-size','p-beds','p-baths','p-desc'].forEach(id => {
       document.getElementById(id).value = '';
@@ -532,6 +597,8 @@
     buildGradPicker(defGrad);
     buildIconPicker('🏢');
     toggleAptFields();
+    uploadedImages = [];
+    renderMediaPreview();
   }
 
   async function openPropForm(id) {
@@ -563,6 +630,8 @@
       buildGradPicker(grad);
       buildIconPicker(icon);
       toggleAptFields();
+      try { uploadedImages = JSON.parse(p.images || '[]'); } catch { uploadedImages = []; }
+      renderMediaPreview();
     } else {
       document.getElementById('pform-title').textContent = 'Add Property';
     }
@@ -593,6 +662,7 @@
       gradient:    document.getElementById('p-gradient').value,
       icon:        document.getElementById('p-icon').value,
       description: document.getElementById('p-desc').value.trim(),
+      images:      uploadedImages,
     };
     if (!body.title || !body.price || !body.location || !body.size) {
       toast('Please fill in all required fields.', 'err'); return;

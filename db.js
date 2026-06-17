@@ -15,7 +15,7 @@ db.exec(`
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     title       TEXT    NOT NULL,
     type        TEXT    NOT NULL CHECK(type IN ('apartment','land')),
-    listing     TEXT    NOT NULL CHECK(listing IN ('sale','rent')),
+    listing     TEXT    NOT NULL CHECK(listing IN ('sale','rent','lease','jv')),
     price       INTEGER NOT NULL,
     location    TEXT    NOT NULL,
     bedrooms    INTEGER,
@@ -45,6 +45,12 @@ db.exec(`
     created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 `);
+
+// Add images column if it doesn't exist (migration)
+const cols = db.prepare("PRAGMA table_info(properties)").all().map(c => c.name);
+if (!cols.includes('images')) {
+  db.exec("ALTER TABLE properties ADD COLUMN images TEXT DEFAULT '[]'");
+}
 
 // Seed properties on first run
 const { count } = db.prepare('SELECT COUNT(*) AS count FROM properties').get();

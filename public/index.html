@@ -72,6 +72,7 @@
     .property-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(0,0,0,0.15); }
     .card-image { height: 210px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
     .card-image .img-icon { font-size: 4rem; opacity: 0.4; }
+    .card-image .card-photo { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
     .card-badge { position: absolute; top: 14px; left: 14px; padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
     .badge-sale { background: #e74c3c; color: white; }
     .badge-rent { background: #27ae60; color: white; }
@@ -175,6 +176,10 @@
     .amenity-list { display: flex; flex-wrap: wrap; gap: 8px; }
     .amenity-tag { padding: 6px 14px; background: rgba(26,60,94,0.08); border-radius: 20px; font-size: 0.85rem; color: var(--primary); font-weight: 500; }
     .modal-desc { color: var(--muted); line-height: 1.8; font-size: 0.95rem; margin-bottom: 24px; }
+    .modal-gallery { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .modal-gallery img, .modal-gallery video { width: 80px; height: 60px; object-fit: cover; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: border-color .2s; }
+    .modal-gallery img:hover, .modal-gallery video:hover { border-color: var(--primary); }
+    .modal-img .modal-photo { width: 100%; height: 100%; object-fit: cover; border-radius: 20px 20px 0 0; position: absolute; inset: 0; }
     .modal-cta-row { display: flex; gap: 12px; }
     .modal-cta-row .btn-primary { flex: 1; padding: 13px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
     .modal-cta-row .btn-primary:hover { background: #0f2a45; }
@@ -481,11 +486,18 @@
 
   function bool(v) { return v === 1 || v === true; }
 
+  function parseImages(raw) { try { return JSON.parse(raw || '[]'); } catch { return []; } }
+
   function createCard(p) {
+    const imgs = parseImages(p.images);
+    const hasImg = imgs.length > 0;
+    const cardBg = hasImg ? '' : `background:${p.gradient || 'linear-gradient(135deg,#1a3c5e,#2a6496)'}`;
     return `
       <div class="property-card" onclick="openModal(${p.id})">
-        <div class="card-image" style="background:${p.gradient || 'linear-gradient(135deg,#1a3c5e,#2a6496)'}">
-          <span class="img-icon">${p.icon || '🏠'}</span>
+        <div class="card-image" ${cardBg ? `style="${cardBg}"` : ''}>
+          ${hasImg
+            ? `<img src="${imgs[0]}" alt="${p.title}" class="card-photo" />`
+            : `<span class="img-icon">${p.icon || '🏠'}</span>`}
           <span class="card-badge badge-${p.listing}">${listingLabel(p.listing)}</span>
           <span class="badge-type">${p.type === 'apartment' ? '🏢 Apartment' : '🌿 Land'}</span>
         </div>
@@ -579,7 +591,9 @@
     document.getElementById('modal-overlay').classList.add('open');
     document.body.style.overflow = 'hidden';
     document.getElementById('modal-img-icon').textContent = '⏳';
-    document.getElementById('modal-img').style.background = 'linear-gradient(135deg,#1a3c5e,#0d2340)';
+    const modalImgEl = document.getElementById('modal-img');
+    modalImgEl.style.background = 'linear-gradient(135deg,#1a3c5e,#0d2340)';
+    modalImgEl.innerHTML = `<button class="modal-close" onclick="closeModal()">✕</button><span id="modal-img-icon">⏳</span>`;
     document.getElementById('modal-price').textContent = '';
     document.getElementById('modal-title').textContent = 'Loading…';
     document.getElementById('modal-location').textContent = '';
@@ -591,14 +605,25 @@
     const { data: p } = await res.json();
     if (!p) { closeModal(); return; }
 
-    document.getElementById('modal-img').style.background = p.gradient || 'linear-gradient(135deg,#1a3c5e,#2a6496)';
-    document.getElementById('modal-img-icon').textContent = p.icon || '🏠';
+    const imgs = parseImages(p.images);
+    const modalImg = document.getElementById('modal-img');
+    if (imgs.length > 0) {
+      modalImg.style.background = '';
+      const isVideo = /\.(mp4|mov|webm|avi)$/i.test(imgs[0]);
+      modalImg.innerHTML = `<button class="modal-close" onclick="closeModal()">✕</button>
+        ${isVideo
+          ? `<video class="modal-photo" src="${imgs[0]}" autoplay muted loop></video>`
+          : `<img class="modal-photo" src="${imgs[0]}" alt="${p.title}" />`}`;
+    } else {
+      modalImg.style.background = p.gradient || 'linear-gradient(135deg,#1a3c5e,#2a6496)';
+      document.getElementById('modal-img-icon').textContent = p.icon || '🏠';
+    }
     document.getElementById('modal-price').textContent = formatPrice(p.price, p.listing);
     document.getElementById('modal-title').textContent = p.title;
     document.getElementById('modal-location').textContent = '📍 ' + p.location;
     document.getElementById('modal-badges').innerHTML = `
-      <span class="card-badge badge-${p.listing}" style="position:static">${listingLabel(p.listing)}</span>
-      <span class="badge-type" style="position:static;background:var(--primary)">${p.type === 'apartment' ? '🏢 Apartment' : '🌿 Land'}</span>`;
+      <span class="card-badge badge-${p.listing}">${listingLabel(p.listing)}</span>
+      <span class="badge-type" style="background:var(--primary)">${p.type === 'apartment' ? '🏢 Apartment' : '🌿 Land'}</span>`;
 
     let features = `<div class="modal-feature"><div class="mf-icon">📐</div><div class="mf-val">${p.size}</div><div class="mf-key">Plot Size</div></div>`;
     if (p.type === 'apartment') {
@@ -620,6 +645,27 @@
       <div class="amenity-list">${amenities.map(a => `<span class="amenity-tag">✓ ${a}</span>`).join('')}</div>` : '';
 
     document.getElementById('modal-desc').textContent = p.description || '';
+
+    if (imgs.length > 1) {
+      document.getElementById('modal-amenities').innerHTML += `
+        <div class="modal-gallery">${imgs.map((url, i) => {
+          const isVid = /\.(mp4|mov|webm|avi)$/i.test(url);
+          return isVid
+            ? `<video src="${url}" onclick="switchModalMedia('${url}',true)" muted></video>`
+            : `<img src="${url}" alt="photo ${i+1}" onclick="switchModalMedia('${url}',false)" />`;
+        }).join('')}</div>`;
+    }
+  }
+
+  function switchModalMedia(url, isVideo) {
+    const modalImg = document.getElementById('modal-img');
+    const existing = modalImg.querySelector('.modal-photo');
+    if (existing) existing.remove();
+    const el = document.createElement(isVideo ? 'video' : 'img');
+    el.src = url;
+    el.className = 'modal-photo';
+    if (isVideo) { el.autoplay = true; el.muted = true; el.loop = true; }
+    modalImg.appendChild(el);
   }
 
   function closeModal() {

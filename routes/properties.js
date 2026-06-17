@@ -35,19 +35,21 @@ router.get('/:id', (req, res) => {
 // POST /api/properties
 router.post('/', requireAdmin, (req, res) => {
   const { title, type, listing, price, location, bedrooms, bathrooms, size,
-          parking, pool, gym, security, furnished, gradient, icon, description } = req.body;
+          parking, pool, gym, security, furnished, gradient, icon, description, images } = req.body;
 
   if (!title || !type || !listing || !price || !location || !size) {
     return res.status(400).json({ success: false, message: 'title, type, listing, price, location and size are required' });
   }
 
+  const imagesJson = Array.isArray(images) ? JSON.stringify(images) : (images ?? '[]');
+
   const result = db.prepare(`
     INSERT INTO properties
-      (title, type, listing, price, location, bedrooms, bathrooms, size, parking, pool, gym, security, furnished, gradient, icon, description)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (title, type, listing, price, location, bedrooms, bathrooms, size, parking, pool, gym, security, furnished, gradient, icon, description, images)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(title, type, listing, price, location, bedrooms ?? null, bathrooms ?? null, size,
          parking ? 1 : 0, pool ? 1 : 0, gym ? 1 : 0, security ? 1 : 0, furnished ? 1 : 0,
-         gradient ?? null, icon ?? null, description ?? null);
+         gradient ?? null, icon ?? null, description ?? null, imagesJson);
 
   const property = db.prepare('SELECT * FROM properties WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json({ success: true, data: property });
@@ -59,13 +61,16 @@ router.put('/:id', requireAdmin, (req, res) => {
   if (!existing) return res.status(404).json({ success: false, message: 'Property not found' });
 
   const allowed = ['title','type','listing','price','location','bedrooms','bathrooms','size',
-                   'parking','pool','gym','security','furnished','gradient','icon','description'];
+                   'parking','pool','gym','security','furnished','gradient','icon','description','images'];
   const sets = [], params = [];
 
   for (const field of allowed) {
     if (req.body[field] !== undefined) {
       sets.push(`${field} = ?`);
-      params.push(req.body[field]);
+      const val = field === 'images' && Array.isArray(req.body[field])
+        ? JSON.stringify(req.body[field])
+        : req.body[field];
+      params.push(val);
     }
   }
 

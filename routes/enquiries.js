@@ -1,6 +1,7 @@
-const express = require('express');
-const router = express.Router();
-const db = require('../db');
+const express      = require('express');
+const router       = express.Router();
+const db           = require('../db');
+const requireAdmin = require('../middleware/auth');
 
 // POST /api/enquiries — submit a contact/property enquiry
 router.post('/', (req, res) => {
@@ -20,8 +21,8 @@ router.post('/', (req, res) => {
   res.status(201).json({ success: true, data: enquiry });
 });
 
-// GET /api/enquiries — list all enquiries
-router.get('/', (req, res) => {
+// GET /api/enquiries — list all enquiries (admin only)
+router.get('/', requireAdmin, (req, res) => {
   const { status } = req.query;
   let sql = 'SELECT * FROM enquiries';
   const params = [];
@@ -33,15 +34,15 @@ router.get('/', (req, res) => {
   res.json({ success: true, count: enquiries.length, data: enquiries });
 });
 
-// GET /api/enquiries/:id
-router.get('/:id', (req, res) => {
+// GET /api/enquiries/:id (admin only)
+router.get('/:id', requireAdmin, (req, res) => {
   const enquiry = db.prepare('SELECT * FROM enquiries WHERE id = ?').get(req.params.id);
   if (!enquiry) return res.status(404).json({ success: false, message: 'Enquiry not found' });
   res.json({ success: true, data: enquiry });
 });
 
-// PATCH /api/enquiries/:id/status — update status (new | in-progress | resolved)
-router.patch('/:id/status', (req, res) => {
+// PATCH /api/enquiries/:id/status — update status (admin only)
+router.patch('/:id/status', requireAdmin, (req, res) => {
   const { status } = req.body;
   const valid = ['new', 'in-progress', 'resolved'];
   if (!valid.includes(status)) {
