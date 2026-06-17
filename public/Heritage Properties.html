@@ -45,9 +45,17 @@
     .hero h1 span { color: var(--accent); }
     .hero p { font-size: 1.1rem; color: rgba(255,255,255,0.75); margin-bottom: 40px; line-height: 1.7; }
     .search-box { background: var(--white); border-radius: 16px; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-    .search-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-    .search-tab { padding: 8px 20px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; cursor: pointer; border: 2px solid var(--border); background: transparent; color: var(--muted); transition: all 0.2s; }
+    .search-tabs { display: flex; gap: 6px; margin-bottom: 20px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+    .search-tabs::-webkit-scrollbar { display: none; }
+    .search-tab { padding: 8px 16px; border-radius: 20px; font-weight: 600; font-size: 0.85rem; cursor: pointer; border: 2px solid var(--border); background: transparent; color: var(--muted); transition: all 0.2s; white-space: nowrap; flex-shrink: 0; }
     .search-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .search-tab[data-mode="shortlet"].active { background: #0097a7; border-color: #0097a7; }
+    .search-tab[data-mode="lease"].active   { background: #8e44ad; border-color: #8e44ad; }
+    .search-tab[data-mode="jv"].active      { background: #e67e22; border-color: #e67e22; }
+    .wa-float { position: fixed; bottom: 28px; right: 28px; width: 56px; height: 56px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.7rem; box-shadow: 0 4px 20px rgba(37,211,102,0.5); z-index: 999; text-decoration: none; transition: transform 0.2s, box-shadow 0.2s; }
+    .wa-float:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(37,211,102,0.65); }
+    .btn-whatsapp { flex: 1; padding: 13px; background: #25D366; color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
+    .btn-whatsapp:hover { background: #128C7E; }
     .search-fields { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; }
     .search-fields select, .search-fields input { padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 0.95rem; color: var(--text); outline: none; transition: border-color 0.2s; }
     .search-fields select:focus, .search-fields input:focus { border-color: var(--primary); }
@@ -228,8 +236,11 @@
     <p>Browse thousands of verified apartments and lands for sale or rent. Your perfect home is just one search away.</p>
     <div class="search-box">
       <div class="search-tabs">
-        <button class="search-tab active" onclick="setSearchTab(this,'sale')">Buy</button>
-        <button class="search-tab" onclick="setSearchTab(this,'rent')">Rent</button>
+        <button class="search-tab active" data-mode="sale"     onclick="setSearchTab(this,'sale')">🏠 Buy</button>
+        <button class="search-tab"        data-mode="rent"     onclick="setSearchTab(this,'rent')">🔑 Rent</button>
+        <button class="search-tab"        data-mode="shortlet" onclick="setSearchTab(this,'shortlet')">🌙 Shortlet</button>
+        <button class="search-tab"        data-mode="lease"    onclick="setSearchTab(this,'lease')">📋 Lease</button>
+        <button class="search-tab"        data-mode="jv"       onclick="setSearchTab(this,'jv')">🤝 JV</button>
       </div>
       <div class="search-fields">
         <input type="text" id="search-location" placeholder="📍 Enter location..." />
@@ -459,6 +470,8 @@
   </div>
 </footer>
 
+<a class="wa-float" id="wa-float-btn" href="https://wa.me/2347031946419?text=Hi%20Heritage%20Realtor%2C%20I%27d%20like%20to%20enquire%20about%20a%20property." target="_blank" title="Chat on WhatsApp">💬</a>
+
 <div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBg(event)">
   <div class="modal" id="modal">
     <div class="modal-img" id="modal-img">
@@ -475,7 +488,8 @@
       <div class="modal-desc" id="modal-desc"></div>
       <div class="modal-cta-row">
         <button class="btn-primary" onclick="scrollToContact()">📞 Enquire Now</button>
-        <button class="btn-outline" onclick="closeModal()">← Back to Listings</button>
+        <button class="btn-whatsapp" id="modal-wa-btn" onclick="openWhatsApp()">💬 WhatsApp</button>
+        <button class="btn-outline" onclick="closeModal()">← Back</button>
       </div>
     </div>
   </div>
@@ -485,6 +499,8 @@
   let searchMode = 'sale';
   let visibleCount = 6;
   let filteredList = [];
+  let currentProp = null;
+  let waNumber = '2347031946419';
 
   const fmt = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 });
   const listingLabel = l => ({ sale:'For Sale', rent:'For Rent', lease:'For Lease', jv:'JV', shortlet:'Shortlet' }[l] || l);
@@ -609,6 +625,7 @@
     const res = await fetch(`/api/properties/${id}`);
     const { data: p } = await res.json();
     if (!p) { closeModal(); return; }
+    currentProp = p;
 
     const imgs = parseImages(p.images);
     const modalImg = document.getElementById('modal-img');
@@ -674,9 +691,18 @@
     modalImg.appendChild(el);
   }
 
+  function openWhatsApp() {
+    const num = waNumber.replace(/\D/g, '');
+    const text = currentProp
+      ? `Hi Heritage Realtor, I'm interested in: *${currentProp.title}* at ${currentProp.location}. Please send more details.`
+      : `Hi Heritage Realtor, I'd like to enquire about a property.`;
+    window.open(`https://wa.me/${num}?text=${encodeURIComponent(text)}`, '_blank');
+  }
+
   function closeModal() {
     document.getElementById('modal-overlay').classList.remove('open');
     document.body.style.overflow = '';
+    currentProp = null;
   }
 
   function closeModalOnBg(e) {
@@ -751,6 +777,11 @@
       set('about-para2', s.about_para2); set('about-years', s.about_years_exp);
       set('about-clients', s.about_clients); set('about-properties', s.about_properties);
       set('about-cities',  s.about_cities);
+      if (s.whatsapp_number) {
+        waNumber = s.whatsapp_number;
+        const floatBtn = document.getElementById('wa-float-btn');
+        if (floatBtn) floatBtn.href = `https://wa.me/${s.whatsapp_number.replace(/\D/g,'')}?text=Hi%20Heritage%20Realtor%2C%20I%27d%20like%20to%20enquire%20about%20a%20property.`;
+      }
     } catch (_) { /* silently keep hardcoded defaults if API unavailable */ }
   }
 

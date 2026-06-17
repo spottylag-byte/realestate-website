@@ -130,6 +130,7 @@ if (settingsCount === 0) {
     ['contact_phone',   '+234 800 000 0001'],
     ['contact_email',   'info@heritagerealtors.ng'],
     ['contact_hours',   'Monday – Saturday: 8am – 6pm'],
+    ['whatsapp_number', '2347031946419'],
     ['stat1_num',       '1,200+'], ['stat1_label', 'Properties Listed'],
     ['stat2_num',       '850+'],   ['stat2_label', 'Happy Clients'],
     ['stat3_num',       '18+'],    ['stat3_label', 'Cities Covered'],
@@ -141,6 +142,12 @@ if (settingsCount === 0) {
     ['about_properties','1200+'], ['about_cities', '18'],
   ];
   db.transaction(() => defaults.forEach(([k, v]) => setSetting.run(k, v)))();
+}
+
+// Add whatsapp_number setting if it doesn't exist yet (migration for existing DBs)
+const hasWa = db.prepare("SELECT 1 FROM site_settings WHERE key = 'whatsapp_number'").get();
+if (!hasWa) {
+  db.prepare("INSERT INTO site_settings (key, value) VALUES ('whatsapp_number', '2347031946419')").run();
 }
 
 // Override ADMIN_PASSWORD from DB if a custom one has been saved

@@ -246,6 +246,7 @@
           <div class="fg"><label>Phone Number</label><input id="s-phone" type="text" /></div>
           <div class="fg"><label>Email Address</label><input id="s-email" type="email" /></div>
           <div class="fg"><label>Working Hours</label><input id="s-hours" type="text" /></div>
+          <div class="fg"><label>WhatsApp Number (no + or spaces, e.g. 2347031946419)</label><input id="s-whatsapp" type="text" /></div>
         </div>
       </div>
 
@@ -769,6 +770,7 @@
     const set = (id, key) => { const el = document.getElementById(id); if (el && s[key] !== undefined) el.value = s[key]; };
     set('s-address','contact_address'); set('s-phone','contact_phone');
     set('s-email','contact_email');     set('s-hours','contact_hours');
+    set('s-whatsapp','whatsapp_number');
     set('s-stat1-num','stat1_num');     set('s-stat1-label','stat1_label');
     set('s-stat2-num','stat2_num');     set('s-stat2-label','stat2_label');
     set('s-stat3-num','stat3_num');     set('s-stat3-label','stat3_label');
@@ -784,6 +786,7 @@
     const body = {
       contact_address: g('s-address'),    contact_phone:   g('s-phone'),
       contact_email:   g('s-email'),      contact_hours:   g('s-hours'),
+      whatsapp_number: g('s-whatsapp'),
       stat1_num:       g('s-stat1-num'),  stat1_label:     g('s-stat1-label'),
       stat2_num:       g('s-stat2-num'),  stat2_label:     g('s-stat2-label'),
       stat3_num:       g('s-stat3-num'),  stat3_label:     g('s-stat3-label'),
