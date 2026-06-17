@@ -322,6 +322,7 @@
           <select id="p-listing">
             <option value="sale">For Sale</option>
             <option value="rent">For Rent</option>
+            <option value="shortlet">Shortlet</option>
             <option value="lease">For Lease</option>
             <option value="jv">JV</option>
           </select>
@@ -480,14 +481,16 @@
     const lands  = props.filter(p => p.type === 'land').length;
     const sale   = props.filter(p => p.listing === 'sale').length;
     const rent   = props.filter(p => p.listing === 'rent').length;
-    const lease  = props.filter(p => p.listing === 'lease').length;
-    const jv     = props.filter(p => p.listing === 'jv').length;
+    const lease     = props.filter(p => p.listing === 'lease').length;
+    const jv        = props.filter(p => p.listing === 'jv').length;
+    const shortlet  = props.filter(p => p.listing === 'shortlet').length;
     document.getElementById('prop-chips').innerHTML = `
       <div class="chip"><div class="chip-num">${props.length}</div><div class="chip-lbl">Total</div></div>
       <div class="chip"><div class="chip-num">${apts}</div><div class="chip-lbl">Apartments</div></div>
       <div class="chip"><div class="chip-num">${lands}</div><div class="chip-lbl">Land</div></div>
       <div class="chip"><div class="chip-num">${sale}</div><div class="chip-lbl">For Sale</div></div>
       <div class="chip"><div class="chip-num">${rent}</div><div class="chip-lbl">For Rent</div></div>
+      <div class="chip"><div class="chip-num">${shortlet}</div><div class="chip-lbl">Shortlet</div></div>
       <div class="chip"><div class="chip-num">${lease}</div><div class="chip-lbl">For Lease</div></div>
       <div class="chip"><div class="chip-num">${jv}</div><div class="chip-lbl">JV</div></div>`;
 
@@ -500,8 +503,8 @@
       <tr>
         <td><strong>${esc(p.title)}</strong></td>
         <td><span class="badge badge-${p.type}">${p.type}</span></td>
-        <td><span class="badge badge-${p.listing}">${{sale:'Sale',rent:'Rent',lease:'Lease',jv:'JV'}[p.listing]||p.listing}</span></td>
-        <td>${fmt.format(p.price)}${(p.listing === 'rent' || p.listing === 'lease') ? '/yr' : ''}</td>
+        <td><span class="badge badge-${p.listing}">${{sale:'Sale',rent:'Rent',shortlet:'Shortlet',lease:'Lease',jv:'JV'}[p.listing]||p.listing}</span></td>
+        <td>${fmt.format(p.price)}${p.listing === 'shortlet' ? '/night' : (p.listing === 'rent' || p.listing === 'lease') ? '/yr' : ''}</td>
         <td>${esc(p.location)}</td>
         <td class="td-actions">
           <button class="btn btn-outline btn-sm" onclick="openPropForm(${p.id})">Edit</button>

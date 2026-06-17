@@ -15,7 +15,7 @@ db.exec(`
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     title       TEXT    NOT NULL,
     type        TEXT    NOT NULL CHECK(type IN ('apartment','land')),
-    listing     TEXT    NOT NULL CHECK(listing IN ('sale','rent','lease','jv')),
+    listing     TEXT    NOT NULL CHECK(listing IN ('sale','rent','lease','jv','shortlet')),
     price       INTEGER NOT NULL,
     location    TEXT    NOT NULL,
     bedrooms    INTEGER,
@@ -50,6 +50,39 @@ db.exec(`
 const cols = db.prepare("PRAGMA table_info(properties)").all().map(c => c.name);
 if (!cols.includes('images')) {
   db.exec("ALTER TABLE properties ADD COLUMN images TEXT DEFAULT '[]'");
+}
+
+// Migrate CHECK constraint to include 'shortlet' if not already done
+const tblSql = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='properties'").get();
+if (tblSql && !tblSql.sql.includes('shortlet')) {
+  db.exec(`
+    CREATE TABLE properties_new AS SELECT * FROM properties WHERE 0;
+    DROP TABLE properties_new;
+    CREATE TABLE properties_new (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      title       TEXT    NOT NULL,
+      type        TEXT    NOT NULL CHECK(type IN ('apartment','land')),
+      listing     TEXT    NOT NULL CHECK(listing IN ('sale','rent','lease','jv','shortlet')),
+      price       INTEGER NOT NULL,
+      location    TEXT    NOT NULL,
+      bedrooms    INTEGER,
+      bathrooms   INTEGER,
+      size        TEXT    NOT NULL,
+      parking     INTEGER DEFAULT 0,
+      pool        INTEGER DEFAULT 0,
+      gym         INTEGER DEFAULT 0,
+      security    INTEGER DEFAULT 0,
+      furnished   INTEGER DEFAULT 0,
+      gradient    TEXT,
+      icon        TEXT,
+      description TEXT,
+      images      TEXT    DEFAULT '[]',
+      created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+    INSERT INTO properties_new SELECT * FROM properties;
+    DROP TABLE properties;
+    ALTER TABLE properties_new RENAME TO properties;
+  `);
 }
 
 // Seed properties on first run

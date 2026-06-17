@@ -78,6 +78,7 @@
     .badge-rent { background: #27ae60; color: white; }
     .badge-lease { background: #8e44ad; color: white; }
     .badge-jv { background: #e67e22; color: white; }
+    .badge-shortlet { background: #0097a7; color: white; }
     .badge-type { position: absolute; top: 14px; right: 14px; background: rgba(0,0,0,0.5); color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
     .card-body { padding: 20px; }
     .card-price { font-size: 1.35rem; font-weight: 800; color: var(--primary); margin-bottom: 6px; }
@@ -267,6 +268,7 @@
     <button class="filter-btn active" onclick="filterProps(this,'all')">All</button>
     <button class="filter-btn" onclick="filterProps(this,'sale')">For Sale</button>
     <button class="filter-btn" onclick="filterProps(this,'rent')">For Rent</button>
+    <button class="filter-btn" onclick="filterProps(this,'shortlet')">Shortlet</button>
     <button class="filter-btn" onclick="filterProps(this,'lease')">For Lease</button>
     <button class="filter-btn" onclick="filterProps(this,'jv')">JV</button>
     <button class="filter-btn" onclick="filterProps(this,'apartment')">Apartments</button>
@@ -383,6 +385,7 @@
           <select id="f-interest">
             <option>Buying a Property</option>
             <option>Renting a Property</option>
+            <option>Shortlet Stay</option>
             <option>Leasing a Property</option>
             <option>JV Partnership</option>
             <option>Selling a Property</option>
@@ -431,6 +434,7 @@
       <ul>
         <li><a href="#properties">Apartments for Sale</a></li>
         <li><a href="#properties">Apartments for Rent</a></li>
+        <li><a href="#properties">Shortlets</a></li>
         <li><a href="#properties">Land for Sale</a></li>
         <li><a href="#properties">Land for Rent</a></li>
       </ul>
@@ -481,8 +485,8 @@
   let filteredList = [];
 
   const fmt = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 });
-  const listingLabel = l => ({ sale:'For Sale', rent:'For Rent', lease:'For Lease', jv:'JV' }[l] || l);
-  const formatPrice = (price, listing) => fmt.format(price) + (listing === 'rent' || listing === 'lease' ? '/yr' : '');
+  const listingLabel = l => ({ sale:'For Sale', rent:'For Rent', lease:'For Lease', jv:'JV', shortlet:'Shortlet' }[l] || l);
+  const formatPrice = (price, listing) => fmt.format(price) + (listing === 'shortlet' ? '/night' : listing === 'rent' || listing === 'lease' ? '/yr' : '');
 
   function bool(v) { return v === 1 || v === true; }
 
@@ -545,7 +549,7 @@
     showLoading();
 
     const params = {};
-    if (['sale','rent','lease','jv'].includes(filter)) params.listing = filter;
+    if (['sale','rent','lease','jv','shortlet'].includes(filter)) params.listing = filter;
     if (filter === 'apartment' || filter === 'land') params.type = filter;
 
     filteredList = await apiFetch(params);
