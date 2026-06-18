@@ -41,9 +41,9 @@ router.post('/', requireAdmin, (req, res) => {
   if (!title || !type || !listing || !price || !location) {
     return res.status(400).json({ success: false, message: 'title, type, listing, price and location are required' });
   }
-  if (listing === 'shortlet') {
+  if (listing === 'shortlet' || listing === 'rent') {
     if (!building_style || !occupancy_type) {
-      return res.status(400).json({ success: false, message: 'building_style and occupancy_type are required for shortlet listings' });
+      return res.status(400).json({ success: false, message: 'building_style and occupancy_type are required for shortlet/rent listings' });
     }
   } else if (!size) {
     return res.status(400).json({ success: false, message: 'size is required' });

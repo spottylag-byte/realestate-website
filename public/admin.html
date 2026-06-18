@@ -332,11 +332,16 @@
         <div class="fg"><label>Location *</label><input id="p-location" type="text" placeholder="e.g. Victoria Island, Lagos" /></div>
         <div class="fg normal-field"><label>Size *</label><input id="p-size" type="text" placeholder="e.g. 180 sqm" /></div>
         <div class="fg shortlet-field" style="display:none">
-          <label>Building Style *</label>
+          <label>Property Type *</label>
           <select id="p-building-style">
             <option value="apartment">Apartment / Flat</option>
+            <option value="studio">Studio</option>
             <option value="duplex">Duplex</option>
             <option value="bungalow">Bungalow</option>
+            <option value="terrace">Terrace / Townhouse</option>
+            <option value="semi-detached">Semi-Detached House</option>
+            <option value="detached">Detached House</option>
+            <option value="penthouse">Penthouse</option>
             <option value="self-contained">Self-Contained</option>
           </select>
         </div>
@@ -567,9 +572,10 @@
   }
 
   function toggleShortletFields() {
-    const isShortlet = document.getElementById('p-listing').value === 'shortlet';
-    document.querySelectorAll('.shortlet-field').forEach(el => el.style.display = isShortlet ? '' : 'none');
-    document.querySelectorAll('.normal-field').forEach(el => el.style.display = isShortlet ? 'none' : '');
+    const listing = document.getElementById('p-listing').value;
+    const usesStyleFields = listing === 'shortlet' || listing === 'rent';
+    document.querySelectorAll('.shortlet-field').forEach(el => el.style.display = usesStyleFields ? '' : 'none');
+    document.querySelectorAll('.normal-field').forEach(el => el.style.display = usesStyleFields ? 'none' : '');
   }
 
   /* ── MEDIA UPLOAD ── */
@@ -688,16 +694,16 @@
     const id       = document.getElementById('p-id').value;
     const type     = document.getElementById('p-type').value;
     const listing  = document.getElementById('p-listing').value;
-    const isShortlet = listing === 'shortlet';
+    const usesStyleFields = listing === 'shortlet' || listing === 'rent';
     const body = {
       title:       document.getElementById('p-title').value.trim(),
       type,
       listing,
       price:       parseInt(document.getElementById('p-price').value),
       location:    document.getElementById('p-location').value.trim(),
-      size:        isShortlet ? '' : document.getElementById('p-size').value.trim(),
-      building_style: isShortlet ? document.getElementById('p-building-style').value : null,
-      occupancy_type: isShortlet ? document.getElementById('p-occupancy-type').value : null,
+      size:        usesStyleFields ? '' : document.getElementById('p-size').value.trim(),
+      building_style: usesStyleFields ? document.getElementById('p-building-style').value : null,
+      occupancy_type: usesStyleFields ? document.getElementById('p-occupancy-type').value : null,
       bedrooms:    type === 'apartment' ? (parseInt(document.getElementById('p-beds').value)  || null) : null,
       bathrooms:   type === 'apartment' ? (parseInt(document.getElementById('p-baths').value) || null) : null,
       parking:     document.getElementById('p-parking').checked   ? 1 : 0,
@@ -715,10 +721,10 @@
     if (!body.title || !body.price || !body.location) {
       toast('Please fill in all required fields.', 'err'); return;
     }
-    if (isShortlet && (!body.building_style || !body.occupancy_type)) {
-      toast('Please select building style and occupancy type.', 'err'); return;
+    if (usesStyleFields && (!body.building_style || !body.occupancy_type)) {
+      toast('Please select property type and occupancy type.', 'err'); return;
     }
-    if (!isShortlet && !body.size) {
+    if (!usesStyleFields && !body.size) {
       toast('Please fill in all required fields.', 'err'); return;
     }
     const res = await api(id ? 'PUT' : 'POST', id ? `/api/properties/${id}` : '/api/properties', body);
