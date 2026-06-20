@@ -251,6 +251,17 @@
       </div>
 
       <div class="settings-block">
+        <h3>🔗 Social Media Links</h3>
+        <p class="pg-sub" style="margin-bottom:14px">Leave blank to hide an icon from the footer. Paste the full URL (e.g. https://facebook.com/yourpage).</p>
+        <div class="s-grid">
+          <div class="fg"><label>Facebook URL</label><input id="s-facebook" type="text" placeholder="https://facebook.com/..." /></div>
+          <div class="fg"><label>Instagram URL</label><input id="s-instagram" type="text" placeholder="https://instagram.com/..." /></div>
+          <div class="fg"><label>Twitter / X URL</label><input id="s-twitter" type="text" placeholder="https://x.com/..." /></div>
+          <div class="fg"><label>LinkedIn URL</label><input id="s-linkedin" type="text" placeholder="https://linkedin.com/company/..." /></div>
+        </div>
+      </div>
+
+      <div class="settings-block">
         <h3>📊 Stats Bar</h3>
         <div class="s-grid">
           <div class="fg"><label>Stat 1 — Number</label><input id="s-stat1-num" type="text" placeholder="e.g. 1,200+" /></div>
@@ -842,6 +853,8 @@
     set('s-address','contact_address'); set('s-phone','contact_phone');
     set('s-email','contact_email');     set('s-hours','contact_hours');
     set('s-whatsapp','whatsapp_number');
+    set('s-facebook','social_facebook'); set('s-instagram','social_instagram');
+    set('s-twitter','social_twitter');   set('s-linkedin','social_linkedin');
     set('s-stat1-num','stat1_num');     set('s-stat1-label','stat1_label');
     set('s-stat2-num','stat2_num');     set('s-stat2-label','stat2_label');
     set('s-stat3-num','stat3_num');     set('s-stat3-label','stat3_label');
@@ -858,6 +871,8 @@
       contact_address: g('s-address'),    contact_phone:   g('s-phone'),
       contact_email:   g('s-email'),      contact_hours:   g('s-hours'),
       whatsapp_number: g('s-whatsapp'),
+      social_facebook: g('s-facebook'),   social_instagram: g('s-instagram'),
+      social_twitter:  g('s-twitter'),    social_linkedin:  g('s-linkedin'),
       stat1_num:       g('s-stat1-num'),  stat1_label:     g('s-stat1-label'),
       stat2_num:       g('s-stat2-num'),  stat2_label:     g('s-stat2-label'),
       stat3_num:       g('s-stat3-num'),  stat3_label:     g('s-stat3-label'),

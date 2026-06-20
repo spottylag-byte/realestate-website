@@ -193,10 +193,12 @@ if (settingsCount === 0) {
   const setSetting = db.prepare('INSERT INTO site_settings (key, value) VALUES (?, ?)');
   const defaults = [
     ['contact_address', '15 Marina Road, Victoria Island, Lagos, Nigeria'],
-    ['contact_phone',   '+234 800 000 0001'],
+    ['contact_phone',   '+234 703 194 6419'],
     ['contact_email',   'info@heritagerealtors.ng'],
     ['contact_hours',   'Monday – Saturday: 8am – 6pm'],
     ['whatsapp_number', '2347031946419'],
+    ['social_facebook',  ''], ['social_instagram', ''],
+    ['social_twitter',   ''], ['social_linkedin',  ''],
     ['stat1_num',       '1,200+'], ['stat1_label', 'Properties Listed'],
     ['stat2_num',       '850+'],   ['stat2_label', 'Happy Clients'],
     ['stat3_num',       '18+'],    ['stat3_label', 'Cities Covered'],
@@ -214,6 +216,20 @@ if (settingsCount === 0) {
 const hasWa = db.prepare("SELECT 1 FROM site_settings WHERE key = 'whatsapp_number'").get();
 if (!hasWa) {
   db.prepare("INSERT INTO site_settings (key, value) VALUES ('whatsapp_number', '2347031946419')").run();
+}
+
+// Add social media link settings if missing (migration for existing DBs)
+const setIfMissing = db.prepare('INSERT INTO site_settings (key, value) VALUES (?, ?)');
+['social_facebook', 'social_instagram', 'social_twitter', 'social_linkedin'].forEach(key => {
+  if (!db.prepare('SELECT 1 FROM site_settings WHERE key = ?').get(key)) {
+    setIfMissing.run(key, '');
+  }
+});
+
+// Update the old placeholder phone number to the real one, if still set
+const phoneRow = db.prepare("SELECT value FROM site_settings WHERE key = 'contact_phone'").get();
+if (phoneRow && phoneRow.value === '+234 800 000 0001') {
+  db.prepare("UPDATE site_settings SET value = ? WHERE key = 'contact_phone'").run('+234 703 194 6419');
 }
 
 // Override ADMIN_PASSWORD from DB if a custom one has been saved

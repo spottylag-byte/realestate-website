@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Heritage Realtor - Buy, Sell & Rent Properties</title>
+  <meta name="robots" content="noindex, follow" />
+  <link rel="canonical" href="https://realestate-website-production-1b5e.up.railway.app/" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -187,6 +190,8 @@
     .footer-col ul li a:hover { color: var(--accent); }
     .footer-bottom { border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
     .footer-bottom p { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
+    .footer-bottom p a { color: rgba(255,255,255,0.7); transition: color 0.2s; }
+    .footer-bottom p a:hover { color: var(--accent); }
     .modal-overlay { display: none; position: fixed; inset: 0; z-index: 2000; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px; }
     .modal-overlay.open { display: flex; }
     .modal { background: white; border-radius: 20px; max-width: 760px; width: 100%; max-height: 90vh; overflow-y: auto; box-shadow: 0 24px 80px rgba(0,0,0,0.3); }
@@ -251,7 +256,7 @@
     <a href="#contact">Contact</a>
   </div>
   <a href="#contact" class="nav-cta">List Property</a>
-  <div class="hamburger" onclick="toggleMobileMenu()">
+  <div class="hamburger" onclick="toggleMobileMenu()" role="button" tabindex="0" aria-label="Toggle navigation menu">
     <span></span><span></span><span></span>
   </div>
 </nav>
@@ -272,21 +277,21 @@
         </div>
       </div>
       <div class="search-fields">
-        <input type="text" id="search-location" placeholder="📍 Enter location..." />
-        <select id="search-type" class="sf-normal">
+        <input type="text" id="search-location" placeholder="📍 Enter location..." aria-label="Enter location" />
+        <select id="search-type" class="sf-normal" aria-label="Property type">
           <option value="">All Property Types</option>
           <option value="apartment">Apartment</option>
           <option value="land">Land</option>
         </select>
-        <select id="search-price" class="sf-normal">
+        <select id="search-price" class="sf-normal" aria-label="Price range">
           <option value="">Any Price Range</option>
           <option value="0-5000000">Under ₦5M</option>
           <option value="5000000-20000000">₦5M – ₦20M</option>
           <option value="20000000-50000000">₦20M – ₦50M</option>
           <option value="50000000-999999999">Above ₦50M</option>
         </select>
-        <input type="date" id="search-checkin" class="sf-shortlet" title="Check-in date" />
-        <input type="date" id="search-checkout" class="sf-shortlet" title="Check-out date" />
+        <input type="date" id="search-checkin" class="sf-shortlet" title="Check-in date" aria-label="Check-in date" />
+        <input type="date" id="search-checkout" class="sf-shortlet" title="Check-out date" aria-label="Check-out date" />
         <button class="search-btn" onclick="runSearch()">🔍 Search</button>
       </div>
     </div>
@@ -425,13 +430,13 @@
     <div class="contact-form">
       <h3>Send an Enquiry</h3>
       <div class="form-row">
-        <div class="form-group"><label>Full Name *</label><input type="text" id="f-name" placeholder="Your full name" /></div>
-        <div class="form-group"><label>Phone Number *</label><input type="tel" id="f-phone" placeholder="+234..." /></div>
+        <div class="form-group"><label for="f-name">Full Name *</label><input type="text" id="f-name" placeholder="Your full name" /></div>
+        <div class="form-group"><label for="f-phone">Phone Number *</label><input type="tel" id="f-phone" placeholder="+234..." /></div>
       </div>
-      <div class="form-group"><label>Email Address</label><input type="email" id="f-email" placeholder="your@email.com" /></div>
+      <div class="form-group"><label for="f-email">Email Address</label><input type="email" id="f-email" placeholder="your@email.com" /></div>
       <div class="form-row">
         <div class="form-group">
-          <label>Interested In</label>
+          <label for="f-interest">Interested In</label>
           <select id="f-interest">
             <option>Buying a Property</option>
             <option>Renting a Property</option>
@@ -443,7 +448,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label>Property Type</label>
+          <label for="f-type">Property Type</label>
           <select id="f-type">
             <option>Apartment</option>
             <option>Land</option>
@@ -451,7 +456,7 @@
           </select>
         </div>
       </div>
-      <div class="form-group"><label>Message</label><textarea id="f-message" placeholder="Tell us more about what you're looking for..."></textarea></div>
+      <div class="form-group"><label for="f-message">Message</label><textarea id="f-message" placeholder="Tell us more about what you're looking for..."></textarea></div>
       <button class="submit-btn" id="submit-btn" onclick="submitForm()">Send Enquiry</button>
       <div class="form-success" id="form-success">✅ Thank you! We'll contact you within 24 hours.</div>
     </div>
@@ -463,12 +468,7 @@
     <div class="footer-brand">
       <div class="logo">Heritage<span> Realtor</span></div>
       <p>Nigeria's trusted real estate marketplace connecting buyers, sellers, and tenants since 2010.</p>
-      <div class="footer-social">
-        <div class="social-link">f</div>
-        <div class="social-link">in</div>
-        <div class="social-link">ig</div>
-        <div class="social-link">tw</div>
-      </div>
+      <div class="footer-social" id="footer-social"></div>
     </div>
     <div class="footer-col">
       <h4>Quick Links</h4>
@@ -494,27 +494,27 @@
     <div class="footer-col">
       <h4>Cities</h4>
       <ul>
-        <li><a href="#">Lagos</a></li>
-        <li><a href="#">Abuja</a></li>
-        <li><a href="#">Port Harcourt</a></li>
-        <li><a href="#">Ibadan</a></li>
-        <li><a href="#">Kaduna</a></li>
-        <li><a href="#">Kano</a></li>
+        <li><a href="#properties" onclick="searchByCity('Lagos')">Lagos</a></li>
+        <li><a href="#properties" onclick="searchByCity('Abuja')">Abuja</a></li>
+        <li><a href="#properties" onclick="searchByCity('Port Harcourt')">Port Harcourt</a></li>
+        <li><a href="#properties" onclick="searchByCity('Ibadan')">Ibadan</a></li>
+        <li><a href="#properties" onclick="searchByCity('Kaduna')">Kaduna</a></li>
+        <li><a href="#properties" onclick="searchByCity('Kano')">Kano</a></li>
       </ul>
     </div>
   </div>
   <div class="footer-bottom">
-    <p>© 2026 Heritage Realtor Nigeria. All rights reserved.</p>
-    <p>Privacy Policy · Terms of Service</p>
+    <p id="copyright-year">© 2026 Heritage Realtor Nigeria. All rights reserved.</p>
+    <p><a href="/privacy-policy.html">Privacy Policy</a> · <a href="/terms-of-service.html">Terms of Service</a></p>
   </div>
 </footer>
 
-<a class="wa-float" id="wa-float-btn" href="https://wa.me/2347031946419?text=Hi%20Heritage%20Realtor%2C%20I%27d%20like%20to%20enquire%20about%20a%20property." target="_blank" title="Chat on WhatsApp">💬</a>
+<a class="wa-float" id="wa-float-btn" href="https://wa.me/2347031946419?text=Hi%20Heritage%20Realtor%2C%20I%27d%20like%20to%20enquire%20about%20a%20property." target="_blank" rel="noopener" title="Chat on WhatsApp" aria-label="Chat on WhatsApp">💬</a>
 
 <div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBg(event)">
   <div class="modal" id="modal">
     <div class="modal-img" id="modal-img">
-      <button class="modal-close" onclick="closeModal()">✕</button>
+      <button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
       <span id="modal-img-icon"></span>
     </div>
     <div class="modal-body">
@@ -566,7 +566,7 @@
         <div class="card-image" ${cardBg ? `style="${cardBg}"` : ''}>
           ${hasImg
             ? `<img src="${imgs[0]}" alt="${p.title}" class="card-photo" />`
-            : `<span class="img-icon">${p.icon || '🏠'}</span>`}
+            : `<span class="img-icon" aria-hidden="true">${p.icon || '🏠'}</span>`}
           <span class="card-badge badge-${p.listing}">${listingLabel(p.listing)}</span>
           <span class="badge-type">${p.type === 'apartment' ? '🏢 Apartment' : '🌿 Land'}</span>
           ${bool(p.verified) ? `<span class="badge-verified">✓ Verified</span>` : ''}
@@ -655,7 +655,7 @@
     withCoords.forEach(p => {
       const marker = L.marker([p.lat, p.lng]).addTo(markersLayer);
       marker._propId = p.id;
-      marker.bindPopup(`<strong>${p.title}</strong><br>${formatPrice(p.price, p.listing)}<br><a href="#" onclick="openModal(${p.id});return false;">View Details</a>`);
+      marker.bindPopup(`<strong>${p.title}</strong><br>${formatPrice(p.price, p.listing)}<br><button style="margin-top:4px;cursor:pointer" onclick="openModal(${p.id})">View Details</button>`);
       marker.on('click', () => highlightMapCard(p.id));
       bounds.push([p.lat, p.lng]);
     });
@@ -677,10 +677,17 @@
   }
 
   async function apiFetch(params = {}) {
-    const qs = new URLSearchParams(params).toString();
-    const res = await fetch('/api/properties' + (qs ? '?' + qs : ''));
-    const json = await res.json();
-    return json.data || [];
+    try {
+      const qs = new URLSearchParams(params).toString();
+      const res = await fetch('/api/properties' + (qs ? '?' + qs : ''));
+      if (!res.ok) throw new Error('Request failed');
+      const json = await res.json();
+      return json.data || [];
+    } catch (_) {
+      document.getElementById('properties-grid').innerHTML =
+        '<p class="grid-loading">Couldn\'t load properties. Please check your connection and try again.</p>';
+      return [];
+    }
   }
 
   function showLoading() {
@@ -745,13 +752,24 @@
     document.getElementById('properties').scrollIntoView({ behavior: 'smooth' });
   }
 
+  async function searchByCity(city) {
+    document.getElementById('search-location').value = city;
+    visibleCount = 6;
+    showLoading();
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('.filter-btn').classList.add('active');
+    filteredList = await apiFetch({ search: city });
+    renderCards();
+    document.getElementById('properties').scrollIntoView({ behavior: 'smooth' });
+  }
+
   async function openModal(id) {
     document.getElementById('modal-overlay').classList.add('open');
     document.body.style.overflow = 'hidden';
     document.querySelectorAll('.modal-body .tag-monthly').forEach(el => el.remove());
     const modalImgEl = document.getElementById('modal-img');
     modalImgEl.style.background = 'linear-gradient(135deg,#1a3c5e,#0d2340)';
-    modalImgEl.innerHTML = `<button class="modal-close" onclick="closeModal()">✕</button><span id="modal-img-icon">⏳</span>`;
+    modalImgEl.innerHTML = `<button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button><span id="modal-img-icon">⏳</span>`;
     document.getElementById('modal-price').textContent = '';
     document.getElementById('modal-title').textContent = 'Loading…';
     document.getElementById('modal-location').textContent = '';
@@ -759,8 +777,15 @@
     document.getElementById('modal-amenities').innerHTML = '';
     document.getElementById('modal-desc').textContent = '';
 
-    const res = await fetch(`/api/properties/${id}`);
-    const { data: p } = await res.json();
+    let p;
+    try {
+      const res = await fetch(`/api/properties/${id}`);
+      if (!res.ok) throw new Error('Request failed');
+      ({ data: p } = await res.json());
+    } catch (_) {
+      document.getElementById('modal-title').textContent = 'Couldn\'t load this property. Please try again.';
+      return;
+    }
     if (!p) { closeModal(); return; }
     currentProp = p;
 
@@ -769,7 +794,7 @@
     if (imgs.length > 0) {
       modalImg.style.background = '';
       const isVideo = /\.(mp4|mov|webm|avi)$/i.test(imgs[0]);
-      modalImg.innerHTML = `<button class="modal-close" onclick="closeModal()">✕</button>
+      modalImg.innerHTML = `<button class="modal-close" onclick="closeModal()" aria-label="Close">✕</button>
         ${isVideo
           ? `<video class="modal-photo" src="${imgs[0]}" autoplay muted loop></video>`
           : `<img class="modal-photo" src="${imgs[0]}" alt="${p.title}" />`}`;
@@ -933,12 +958,29 @@
         const floatBtn = document.getElementById('wa-float-btn');
         if (floatBtn) floatBtn.href = `https://wa.me/${s.whatsapp_number.replace(/\D/g,'')}?text=Hi%20Heritage%20Realtor%2C%20I%27d%20like%20to%20enquire%20about%20a%20property.`;
       }
+      renderFooterSocial(s);
     } catch (_) { /* silently keep hardcoded defaults if API unavailable */ }
+  }
+
+  function renderFooterSocial(s) {
+    const links = [
+      { url: s.social_facebook,  label: 'Facebook',  icon: 'f' },
+      { url: s.social_linkedin,  label: 'LinkedIn',   icon: 'in' },
+      { url: s.social_instagram, label: 'Instagram',  icon: 'ig' },
+      { url: s.social_twitter,   label: 'Twitter / X', icon: 'tw' },
+    ].filter(l => l.url);
+    const el = document.getElementById('footer-social');
+    if (!el) return;
+    el.innerHTML = links.length
+      ? links.map(l => `<a class="social-link" href="${l.url}" target="_blank" rel="noopener" aria-label="${l.label}">${l.icon}</a>`).join('')
+      : '';
   }
 
   // Boot: load properties and site settings
   apiFetch().then(data => { filteredList = data; renderCards(); });
   loadSettings();
+  document.getElementById('copyright-year').textContent =
+    `© ${new Date().getFullYear()} Heritage Realtor Nigeria. All rights reserved.`;
 </script>
 </body>
 </html>

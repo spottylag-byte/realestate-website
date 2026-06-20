@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /admin.html
+
+Sitemap: https://realestate-website-production-1b5e.up.railway.app/sitemap.xml
