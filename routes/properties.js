@@ -36,7 +36,7 @@ router.get('/:id', (req, res) => {
 router.post('/', requireAdmin, (req, res) => {
   const { title, type, listing, price, location, bedrooms, bathrooms, size,
           parking, pool, gym, security, furnished, gradient, icon, description, images,
-          verified, pay_monthly, building_style, occupancy_type } = req.body;
+          verified, pay_monthly, building_style, occupancy_type, lat, lng } = req.body;
 
   if (!title || !type || !listing || !price || !location) {
     return res.status(400).json({ success: false, message: 'title, type, listing, price and location are required' });
@@ -53,12 +53,13 @@ router.post('/', requireAdmin, (req, res) => {
 
   const result = db.prepare(`
     INSERT INTO properties
-      (title, type, listing, price, location, bedrooms, bathrooms, size, parking, pool, gym, security, furnished, gradient, icon, description, images, verified, pay_monthly, building_style, occupancy_type)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (title, type, listing, price, location, bedrooms, bathrooms, size, parking, pool, gym, security, furnished, gradient, icon, description, images, verified, pay_monthly, building_style, occupancy_type, lat, lng)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(title, type, listing, price, location, bedrooms ?? null, bathrooms ?? null, size ?? '',
          parking ? 1 : 0, pool ? 1 : 0, gym ? 1 : 0, security ? 1 : 0, furnished ? 1 : 0,
          gradient ?? null, icon ?? null, description ?? null, imagesJson,
-         verified ? 1 : 0, pay_monthly ? 1 : 0, building_style ?? null, occupancy_type ?? null);
+         verified ? 1 : 0, pay_monthly ? 1 : 0, building_style ?? null, occupancy_type ?? null,
+         lat ?? null, lng ?? null);
 
   const property = db.prepare('SELECT * FROM properties WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json({ success: true, data: property });
@@ -71,7 +72,7 @@ router.put('/:id', requireAdmin, (req, res) => {
 
   const allowed = ['title','type','listing','price','location','bedrooms','bathrooms','size',
                    'parking','pool','gym','security','furnished','gradient','icon','description','images',
-                   'verified','pay_monthly','building_style','occupancy_type'];
+                   'verified','pay_monthly','building_style','occupancy_type','lat','lng'];
   const sets = [], params = [];
 
   const boolFields = ['parking','pool','gym','security','furnished','verified','pay_monthly'];

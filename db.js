@@ -33,6 +33,8 @@ db.exec(`
     pay_monthly INTEGER DEFAULT 0,
     building_style TEXT,
     occupancy_type TEXT,
+    lat         REAL,
+    lng         REAL,
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -67,6 +69,12 @@ if (!cols.includes('building_style')) {
 if (!cols.includes('occupancy_type')) {
   db.exec("ALTER TABLE properties ADD COLUMN occupancy_type TEXT");
 }
+if (!cols.includes('lat')) {
+  db.exec("ALTER TABLE properties ADD COLUMN lat REAL");
+}
+if (!cols.includes('lng')) {
+  db.exec("ALTER TABLE properties ADD COLUMN lng REAL");
+}
 
 // Migrate CHECK constraint to include 'shortlet' if not already done
 const tblSql = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='properties'").get();
@@ -97,6 +105,8 @@ if (tblSql && !tblSql.sql.includes('shortlet')) {
       pay_monthly INTEGER DEFAULT 0,
       building_style TEXT,
       occupancy_type TEXT,
+      lat         REAL,
+      lng         REAL,
       created_at  DATETIME DEFAULT CURRENT_TIMESTAMP
     );
     INSERT INTO properties_new (id,title,type,listing,price,location,bedrooms,bathrooms,size,parking,pool,gym,security,furnished,gradient,icon,description,images,created_at)
@@ -140,6 +150,41 @@ if (count === 0) {
 
   db.transaction(() => seed.forEach(p => insert.run(p)))();
   console.log(`Seeded ${seed.length} properties into the database.`);
+}
+
+// Back-fill lat/lng for properties that don't have coordinates yet, using a
+// lookup of known Nigerian neighbourhoods. New properties added via the admin
+// panel can set lat/lng directly; this just covers the seed/legacy data so
+// the map view isn't empty.
+const AREA_COORDS = [
+  ['Victoria Island',        6.4281, 3.4219],
+  ['Lekki Phase 1',          6.4474, 3.4719],
+  ['Ibeju-Lekki',            6.4698, 3.7700],
+  ['Ajah',                   6.4698, 3.5852],
+  ['Epe',                    6.5832, 3.9850],
+  ['Ikoyi',                  6.4541, 3.4316],
+  ['Asokoro',                9.0379, 7.5251],
+  ['Garki',                  9.0379, 7.4951],
+  ['Maitama',                9.0921, 7.4905],
+  ['Gwarinpa',               9.1107, 7.4165],
+  ['Trans-Amadi',            4.7794, 7.0335],
+  ['Old GRA, Port Harcourt', 4.8156, 7.0307],
+  ['Rumuola',                4.8396, 6.9919],
+  ['Bodija',                 7.4258, 3.9116],
+  ['GRA, Kaduna',            10.5167, 7.4333],
+  ['Ungwan Rimi',            10.5300, 7.4200],
+  ['Nassarawa GRA',          11.9914, 8.5317],
+  ['Sabon Gari',             12.0050, 8.5264],
+];
+const noCoords = db.prepare('SELECT id, location FROM properties WHERE lat IS NULL').all();
+if (noCoords.length) {
+  const setCoords = db.prepare('UPDATE properties SET lat = ?, lng = ? WHERE id = ?');
+  db.transaction(() => {
+    noCoords.forEach(p => {
+      const match = AREA_COORDS.find(([area]) => p.location.includes(area));
+      if (match) setCoords.run(match[1], match[2], p.id);
+    });
+  })();
 }
 
 // Seed default site settings on first run

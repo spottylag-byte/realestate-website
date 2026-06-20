@@ -330,6 +330,17 @@
         </div>
         <div class="fg"><label>Price (₦) *</label><input id="p-price" type="number" placeholder="e.g. 45000000" /></div>
         <div class="fg"><label>Location *</label><input id="p-location" type="text" placeholder="e.g. Victoria Island, Lagos" /></div>
+        <div class="fg">
+          <label>Latitude</label>
+          <input id="p-lat" type="number" step="any" placeholder="e.g. 6.4281" />
+        </div>
+        <div class="fg">
+          <label>Longitude</label>
+          <input id="p-lng" type="number" step="any" placeholder="e.g. 3.4219" />
+        </div>
+        <div class="fg f-full" style="margin-top:-8px">
+          <p style="font-size:.78rem;color:var(--muted)">📍 Optional, but needed for the property to show a pin on the Map View. Tip: search the address on Google Maps, right-click the pin, and click the coordinates to copy them.</p>
+        </div>
         <div class="fg normal-field"><label>Size *</label><input id="p-size" type="text" placeholder="e.g. 180 sqm" /></div>
         <div class="fg shortlet-field" style="display:none">
           <label>Property Type *</label>
@@ -623,7 +634,7 @@
   function handleDrop(e)       { e.preventDefault(); handleDragLeave(); if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files); }
 
   function resetPropForm() {
-    ['p-id','p-title','p-price','p-location','p-size','p-beds','p-baths','p-desc'].forEach(id => {
+    ['p-id','p-title','p-price','p-location','p-size','p-beds','p-baths','p-desc','p-lat','p-lng'].forEach(id => {
       document.getElementById(id).value = '';
     });
     document.getElementById('p-type').value    = 'apartment';
@@ -657,6 +668,8 @@
       document.getElementById('p-listing').value  = p.listing;
       document.getElementById('p-price').value    = p.price;
       document.getElementById('p-location').value = p.location;
+      document.getElementById('p-lat').value      = p.lat ?? '';
+      document.getElementById('p-lng').value      = p.lng ?? '';
       document.getElementById('p-size').value     = p.size;
       document.getElementById('p-building-style').value = p.building_style || 'apartment';
       document.getElementById('p-occupancy-type').value = p.occupancy_type || 'entire';
@@ -701,6 +714,8 @@
       listing,
       price:       parseInt(document.getElementById('p-price').value),
       location:    document.getElementById('p-location').value.trim(),
+      lat:         document.getElementById('p-lat').value ? parseFloat(document.getElementById('p-lat').value) : null,
+      lng:         document.getElementById('p-lng').value ? parseFloat(document.getElementById('p-lng').value) : null,
       size:        usesStyleFields ? '' : document.getElementById('p-size').value.trim(),
       building_style: usesStyleFields ? document.getElementById('p-building-style').value : null,
       occupancy_type: usesStyleFields ? document.getElementById('p-occupancy-type').value : null,

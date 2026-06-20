@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Heritage Realtor - Buy, Sell & Rent Properties</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -78,6 +79,22 @@
     .filter-btn { padding: 9px 22px; border-radius: 25px; border: 2px solid var(--border); background: transparent; font-size: 0.9rem; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.2s; }
     .filter-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
     .filter-btn:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+    .view-toggle { display: flex; gap: 8px; justify-content: center; margin-bottom: 28px; }
+    .view-btn { padding: 8px 20px; border-radius: 20px; border: 2px solid var(--border); background: transparent; font-weight: 600; font-size: 0.88rem; color: var(--muted); cursor: pointer; transition: all 0.2s; }
+    .view-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .view-btn:hover:not(.active) { border-color: var(--primary); color: var(--primary); }
+    .map-view-wrap { display: flex; gap: 20px; height: 640px; }
+    .map-list-panel { width: 380px; flex-shrink: 0; overflow-y: auto; padding-right: 6px; display: flex; flex-direction: column; gap: 12px; }
+    .map-panel { flex: 1; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+    #leaflet-map { width: 100%; height: 100%; }
+    .map-list-card { display: flex; gap: 12px; background: white; border: 1.5px solid var(--border); border-radius: 10px; padding: 10px; cursor: pointer; transition: box-shadow 0.2s, border-color 0.2s; }
+    .map-list-card:hover, .map-list-card.highlighted { border-color: var(--primary); box-shadow: 0 4px 14px rgba(0,0,0,0.1); }
+    .map-list-card .mlc-img { width: 90px; height: 70px; border-radius: 8px; flex-shrink: 0; object-fit: cover; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: white; }
+    .map-list-card .mlc-body { flex: 1; min-width: 0; }
+    .map-list-card .mlc-price { font-weight: 800; color: var(--primary); font-size: 0.92rem; }
+    .map-list-card .mlc-title { font-size: 0.85rem; font-weight: 600; margin: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .map-list-card .mlc-loc { font-size: 0.78rem; color: var(--muted); }
+    .map-no-pin { text-align: center; padding: 40px 16px; color: var(--muted); font-size: 0.85rem; }
     .properties-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 28px; }
     .property-card { background: var(--white); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); transition: transform 0.25s, box-shadow 0.25s; cursor: pointer; border: 1px solid var(--border); }
     .property-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(0,0,0,0.15); }
@@ -204,6 +221,9 @@
       .footer-grid { grid-template-columns: 1fr 1fr; }
       .search-fields { grid-template-columns: 1fr 1fr; }
       .search-fields .search-btn { grid-column: span 2; }
+      .map-view-wrap { flex-direction: column; height: auto; }
+      .map-list-panel { width: 100%; max-height: 320px; }
+      .map-panel { height: 380px; }
     }
     @media (max-width: 640px) {
       .nav-links, .nav-cta { display: none; }
@@ -296,11 +316,19 @@
     <button class="filter-btn" onclick="filterProps(this,'apartment')">Apartments</button>
     <button class="filter-btn" onclick="filterProps(this,'land')">Land</button>
   </div>
+  <div class="view-toggle">
+    <button class="view-btn active" id="view-grid-btn" onclick="setViewMode('grid')">▦ Grid View</button>
+    <button class="view-btn" id="view-map-btn" onclick="setViewMode('map')">🗺️ Map View</button>
+  </div>
   <div class="properties-grid" id="properties-grid">
     <p class="grid-loading">Loading properties…</p>
   </div>
-  <div class="load-more-wrap">
+  <div class="load-more-wrap" id="load-more-wrap">
     <button class="load-more-btn" id="load-more-btn" style="display:none" onclick="loadMore()">Load More Properties</button>
+  </div>
+  <div class="map-view-wrap" id="map-view-wrap" style="display:none">
+    <div class="map-list-panel" id="map-list-panel"></div>
+    <div class="map-panel"><div id="leaflet-map"></div></div>
   </div>
 </section>
 
@@ -506,6 +534,7 @@
   </div>
 </div>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
   let searchMode = 'sale';
   let visibleCount = 6;
@@ -514,6 +543,9 @@
   let waNumber = '2347031946419';
   let shortletCheckin = '';
   let shortletCheckout = '';
+  let viewMode = 'grid';
+  let leafletMap = null;
+  let markersLayer = null;
 
   const fmt = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', maximumFractionDigits: 0 });
   const listingLabel = l => ({ sale:'For Sale', rent:'For Rent', lease:'For Lease', jv:'JV', shortlet:'Shortlet' }[l] || l);
@@ -566,6 +598,82 @@
       : '<p class="grid-loading">No properties found.</p>';
     document.getElementById('load-more-btn').style.display =
       filteredList.length > visibleCount ? 'inline-block' : 'none';
+    if (viewMode === 'map') renderMapView();
+  }
+
+  function setViewMode(mode) {
+    viewMode = mode;
+    document.getElementById('view-grid-btn').classList.toggle('active', mode === 'grid');
+    document.getElementById('view-map-btn').classList.toggle('active', mode === 'map');
+    document.getElementById('properties-grid').style.display = mode === 'grid' ? '' : 'none';
+    document.getElementById('load-more-wrap').style.display = mode === 'grid' ? '' : 'none';
+    document.getElementById('map-view-wrap').style.display = mode === 'map' ? 'flex' : 'none';
+    if (mode === 'map') {
+      if (!leafletMap) initMap();
+      setTimeout(() => leafletMap.invalidateSize(), 50);
+      renderMapView();
+    }
+  }
+
+  function initMap() {
+    leafletMap = L.map('leaflet-map').setView([9.0820, 8.6753], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(leafletMap);
+    markersLayer = L.layerGroup().addTo(leafletMap);
+  }
+
+  function renderMapView() {
+    if (!leafletMap) return;
+    markersLayer.clearLayers();
+    const withCoords = filteredList.filter(p => p.lat && p.lng);
+    const listPanel = document.getElementById('map-list-panel');
+
+    if (!withCoords.length) {
+      listPanel.innerHTML = '<p class="map-no-pin">No properties with a map location match this filter yet.</p>';
+      return;
+    }
+
+    listPanel.innerHTML = withCoords.map(p => {
+      const imgs = parseImages(p.images);
+      const thumb = imgs.length
+        ? `<img src="${imgs[0]}" class="mlc-img" alt="${p.title}" />`
+        : `<div class="mlc-img" style="background:${p.gradient || 'linear-gradient(135deg,#1a3c5e,#2a6496)'}">${p.icon || '🏠'}</div>`;
+      return `
+        <div class="map-list-card" id="map-card-${p.id}" onclick="focusMapMarker(${p.id})">
+          ${thumb}
+          <div class="mlc-body">
+            <div class="mlc-price">${formatPrice(p.price, p.listing)}</div>
+            <div class="mlc-title">${p.title}</div>
+            <div class="mlc-loc">📍 ${p.location}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    const bounds = [];
+    withCoords.forEach(p => {
+      const marker = L.marker([p.lat, p.lng]).addTo(markersLayer);
+      marker._propId = p.id;
+      marker.bindPopup(`<strong>${p.title}</strong><br>${formatPrice(p.price, p.listing)}<br><a href="#" onclick="openModal(${p.id});return false;">View Details</a>`);
+      marker.on('click', () => highlightMapCard(p.id));
+      bounds.push([p.lat, p.lng]);
+    });
+    if (bounds.length) leafletMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 });
+  }
+
+  function focusMapMarker(id) {
+    const p = filteredList.find(x => x.id === id);
+    if (!p || !p.lat || !p.lng) return;
+    leafletMap.setView([p.lat, p.lng], 14);
+    markersLayer.eachLayer(m => { if (m._propId === id) m.openPopup(); });
+    highlightMapCard(id);
+  }
+
+  function highlightMapCard(id) {
+    document.querySelectorAll('.map-list-card').forEach(c => c.classList.remove('highlighted'));
+    const card = document.getElementById('map-card-' + id);
+    if (card) { card.classList.add('highlighted'); card.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
   }
 
   async function apiFetch(params = {}) {
